@@ -262,7 +262,7 @@ public class ProfileModule implements Listener {
         private String targetSuffix;
 
         public TradeRequest(Player sender, Player target) {
-            this.sender = sender;
+            this.sender = sender;https://pastebin.com/HyvzgaR0
             this.target = target;
         }
 
