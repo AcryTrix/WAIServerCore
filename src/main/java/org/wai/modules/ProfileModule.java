@@ -43,12 +43,12 @@ public class ProfileModule implements Listener {
     }
 
     private void openProfileMenu(Player player, Player clickedPlayer) {
-        Inventory menu = Bukkit.createInventory(null, 27, "Профиль " + clickedPlayer.getName());
+        Inventory menu = Bukkit.createInventory(null, 27, "§x§A§D§F§3§F§DП§x§A§D§F§3§F§Dр§x§A§D§F§3§F§Dо§x§A§D§F§3§F§Dф§x§A§D§F§3§F§Dи§x§A§D§F§3§F§Dл§x§A§D§F§3§F§Dь " + clickedPlayer.getName());
 
         // Кнопка "Репутация"
         ItemStack reputationItem = new ItemStack(Material.EMERALD);
         ItemMeta reputationMeta = reputationItem.getItemMeta();
-        reputationMeta.setDisplayName("Репутация");
+        reputationMeta.setDisplayName("&7Репутация");
         reputationMeta.setLore(Arrays.asList("Нажмите, чтобы увидеть репутацию"));
         reputationItem.setItemMeta(reputationMeta);
         menu.setItem(10, reputationItem);
@@ -64,11 +64,11 @@ public class ProfileModule implements Listener {
         // Информация о игроке
         ItemStack infoItem = new ItemStack(Material.BOOK);
         ItemMeta infoMeta = infoItem.getItemMeta();
-        infoMeta.setDisplayName("Информация");
+        infoMeta.setDisplayName("&7Информация");
         infoMeta.setLore(Arrays.asList(
-                "Никнейм: " + clickedPlayer.getName(),
-                "Время в игре: " + getPlayTime(clickedPlayer),
-                "Дата присоединения: " + getJoinDate(clickedPlayer) // Исправленная дата
+                "&fНикнейм: &7" + clickedPlayer.getName(),
+                "&fВремя в игре: &7" + getPlayTime(clickedPlayer),
+                "&fДата присоединения: &7" + getJoinDate(clickedPlayer) // Исправленная дата
         ));
         infoItem.setItemMeta(infoMeta);
         menu.setItem(14, infoItem);
@@ -76,7 +76,7 @@ public class ProfileModule implements Listener {
         // Кнопка "Обменяться титулами"
         ItemStack titleExchangeItem = new ItemStack(Material.NAME_TAG);
         ItemMeta titleExchangeMeta = titleExchangeItem.getItemMeta();
-        titleExchangeMeta.setDisplayName("Обменяться титулами");
+        titleExchangeMeta.setDisplayName("&7Обменяться титулами");
         titleExchangeMeta.setLore(Arrays.asList("Нажмите, чтобы предложить обмен титулами"));
         titleExchangeItem.setItemMeta(titleExchangeMeta);
         menu.setItem(16, titleExchangeItem);
