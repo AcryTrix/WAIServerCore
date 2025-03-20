@@ -1,0 +1,15 @@
+name: WAIServerCore
+version: '1.0'
+main: org.wai.WAIServerCore
+api-version: '1.21'
+commands:
+  link:
+    description: Link Minecraft account with Discord
+  linkadmin:
+    description: Admin account linking tool
+    permission: waiservercore.admin
+    permission-message: "§cYou need permission 'unifiedplugin.admin'!"
+  alts:
+    description: Check player's alternate accounts
+    permission: waiservercore.alts
+    permission-message: "§cYou need permission 'unifiedplugin.alts'!"
