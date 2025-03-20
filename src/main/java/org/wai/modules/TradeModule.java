@@ -22,7 +22,10 @@ public class TradeModule implements CommandExecutor {
 
     public TradeModule(JavaPlugin plugin) {
         this.plugin = plugin;
-        plugin.getCommand("tradesuffix").setExecutor(this); // Регистрируем команду
+        // Регистрируем команды
+        plugin.getCommand("tradesuffix").setExecutor(this);
+        plugin.getCommand("tradeaccept").setExecutor(this);
+        plugin.getCommand("tradedecline").setExecutor(this);
     }
 
     @Override
@@ -34,6 +37,19 @@ public class TradeModule implements CommandExecutor {
 
         Player player = (Player) sender;
 
+        switch (command.getName().toLowerCase()) {
+            case "tradesuffix":
+                return handleTradeSuffix(player, args);
+            case "tradeaccept":
+                return handleTradeAccept(player);
+            case "tradedecline":
+                return handleTradeDecline(player);
+            default:
+                return false;
+        }
+    }
+
+    private boolean handleTradeSuffix(Player player, String[] args) {
         if (args.length != 1) {
             player.sendMessage("§cИспользование: /tradesuffix <никнейм>");
             return true;
@@ -60,19 +76,19 @@ public class TradeModule implements CommandExecutor {
         return true;
     }
 
-    public void acceptTrade(Player player) {
+    private boolean handleTradeAccept(Player player) {
         UUID senderUuid = tradeRequests.get(player.getUniqueId());
 
         if (senderUuid == null) {
             player.sendMessage("§cУ вас нет активных запросов на обмен.");
-            return;
+            return true;
         }
 
         Player sender = Bukkit.getPlayer(senderUuid);
 
         if (sender == null) {
             player.sendMessage("§cИгрок, отправивший запрос, больше не в сети.");
-            return;
+            return true;
         }
 
         // Меняем суффиксы
@@ -82,14 +98,15 @@ public class TradeModule implements CommandExecutor {
 
         // Удаляем запрос
         tradeRequests.remove(player.getUniqueId());
+        return true;
     }
 
-    public void declineTrade(Player player) {
+    private boolean handleTradeDecline(Player player) {
         UUID senderUuid = tradeRequests.get(player.getUniqueId());
 
         if (senderUuid == null) {
             player.sendMessage("§cУ вас нет активных запросов на обмен.");
-            return;
+            return true;
         }
 
         Player sender = Bukkit.getPlayer(senderUuid);
@@ -102,10 +119,17 @@ public class TradeModule implements CommandExecutor {
 
         // Удаляем запрос
         tradeRequests.remove(player.getUniqueId());
+        return true;
     }
 
     private void swapSuffixes(Player player1, Player player2) {
         LuckPerms api = LuckPermsProvider.get();
+
+        if (api == null) {
+            Bukkit.getLogger().warning("LuckPerms не найден. Убедитесь, что плагин LuckPerms установлен и включен.");
+            return;
+        }
+
         User user1 = api.getUserManager().getUser(player1.getUniqueId());
         User user2 = api.getUserManager().getUser(player2.getUniqueId());
 
