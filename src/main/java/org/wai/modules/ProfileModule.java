@@ -6,6 +6,7 @@ import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -21,6 +22,7 @@ public class ProfileModule implements Listener {
     public ProfileModule(JavaPlugin plugin) {
         this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(this, plugin);
+        Bukkit.getPluginManager().registerEvents(new ProfileMenuListener(), plugin); // Регистрация слушателя
     }
 
     @EventHandler
@@ -36,7 +38,7 @@ public class ProfileModule implements Listener {
     }
 
     private void openProfileMenu(Player player, Player clickedPlayer) {
-        Inventory menu = Bukkit.createInventory(null, 9, "Профиль " + clickedPlayer.getName());
+        Inventory menu = Bukkit.createInventory(null, 27, "Профиль " + clickedPlayer.getName());
 
         // Кнопка "Репутация"
         ItemStack reputationItem = new ItemStack(Material.EMERALD);
@@ -44,7 +46,7 @@ public class ProfileModule implements Listener {
         reputationMeta.setDisplayName("Репутация");
         reputationMeta.setLore(Arrays.asList("Нажмите, чтобы увидеть репутацию"));
         reputationItem.setItemMeta(reputationMeta);
-        menu.setItem(0, reputationItem);
+        menu.setItem(10, reputationItem);
 
         // Кнопка "Добавить в друзья"
         ItemStack addFriendItem = new ItemStack(Material.PAPER);
@@ -52,7 +54,7 @@ public class ProfileModule implements Listener {
         addFriendMeta.setDisplayName("Добавить в друзья");
         addFriendMeta.setLore(Arrays.asList("Нажмите, чтобы добавить в друзья"));
         addFriendItem.setItemMeta(addFriendMeta);
-        menu.setItem(1, addFriendItem);
+        menu.setItem(12, addFriendItem);
 
         // Информация о игроке
         ItemStack infoItem = new ItemStack(Material.BOOK);
@@ -64,14 +66,10 @@ public class ProfileModule implements Listener {
                 "Дата присоединения: " + clickedPlayer.getFirstPlayed()
         ));
         infoItem.setItemMeta(infoMeta);
-        menu.setItem(2, infoItem);
+        menu.setItem(14, infoItem);
 
         player.openInventory(menu);
     }
 
     private String getPlayTime(Player player) {
-        long playTimeTicks = player.getStatistic(Statistic.PLAY_ONE_MINUTE);
-        long playTimeHours = playTimeTicks / 72000; // 1 час = 72000 тиков
-        return playTimeHours + " часов";
-    }
-}
+        long playTimeTicks = player.getStatistic(Statistic.PLAY_ONE_MIN
