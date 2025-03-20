@@ -82,7 +82,7 @@ public class ProfileModule implements Listener {
         menu.setItem(16, titleExchangeItem);
 
         // Заполнение пустых слотов фиолетовой панелью
-        ItemStack fillerItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE, 1, (short) 10); // Фиолетовая панель
+        ItemStack fillerItem = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 10); // Фиолетовая панель
         ItemMeta fillerMeta = fillerItem.getItemMeta();
         fillerMeta.setDisplayName(" ");
         fillerItem.setItemMeta(fillerMeta);
@@ -104,6 +104,13 @@ public class ProfileModule implements Listener {
 
     private String getJoinDate(Player player) {
         long firstPlayed = player.getFirstPlayed();
+        
+        // Проверка на корректность данных
+        if (firstPlayed <= 0) {
+            return "Неизвестно"; // Если данные недоступны
+        }
+
+        // Преобразование времени в читаемый формат
         Instant instant = Instant.ofEpochMilli(firstPlayed);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
                 .withZone(ZoneId.systemDefault());
@@ -115,16 +122,33 @@ public class ProfileModule implements Listener {
         public void onInventoryClick(InventoryClickEvent event) {
             Inventory clickedInventory = event.getClickedInventory();
 
+            // Проверяем, что кликнули в меню профиля
             if (clickedInventory != null && clickedInventory.getType() == InventoryType.CHEST &&
-                    clickedInventory.getHolder() == null &&
-                    event.getView().getTitle().startsWith("Профиль")) {
+                clickedInventory.getHolder() == null &&
+                event.getView().getTitle().startsWith("Профиль")) {
 
-                // Запрет на забор и добавление предметов
-                if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY ||
-                        event.getAction() == InventoryAction.PLACE_ALL ||
-                        event.getAction() == InventoryAction.PLACE_ONE ||
-                        event.getAction() == InventoryAction.PLACE_SOME ||
-                        event.getAction() == InventoryAction.SWAP_WITH_CURSOR) {
+                // Запрет на все действия с предметами
+                event.setCancelled(true);
+
+                // Разрешаем только просмотр предметов (клик без действий)
+                if (event.getAction() == InventoryAction.PICKUP_ALL || // ЛКМ
+                    event.getAction() == InventoryAction.PICKUP_HALF || // ПКМ
+                    event.getAction() == InventoryAction.PICKUP_ONE ||
+                    event.getAction() == InventoryAction.PICKUP_SOME ||
+                    event.getAction() == InventoryAction.CLONE_STACK) { // Средний клик
+                    event.setCancelled(true); // Запрещаем забор предметов
+                }
+
+                // Запрет на добавление предметов (даже с одинаковым именем)
+                if (event.getAction() == InventoryAction.PLACE_ALL || // Добавление предметов
+                    event.getAction() == InventoryAction.PLACE_ONE ||
+                    event.getAction() == InventoryAction.PLACE_SOME ||
+                    event.getAction() == InventoryAction.SWAP_WITH_CURSOR) { // Обмен с курсором
+                    event.setCancelled(true);
+                }
+
+                // Запрет на перетаскивание (Shift+клик)
+                if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
                     event.setCancelled(true);
                 }
             }
