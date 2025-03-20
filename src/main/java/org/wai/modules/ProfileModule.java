@@ -72,4 +72,21 @@ public class ProfileModule implements Listener {
     }
 
     private String getPlayTime(Player player) {
-        long playTimeTicks = player.getStatistic(Statistic.PLAY_ONE_MIN
+        long playTimeTicks = player.getStatistic(Statistic.PLAY_ONE_MINUTE);
+        long playTimeHours = playTimeTicks / 72000; // 1 час = 72000 тиков
+        return playTimeHours + " часов";
+    }
+
+    private static class ProfileMenuListener implements Listener {
+        @EventHandler
+        public void onInventoryClick(InventoryClickEvent event) {
+            Inventory clickedInventory = event.getClickedInventory();
+
+            if (clickedInventory != null && clickedInventory.getType() == InventoryType.CHEST &&
+                clickedInventory.getHolder() == null &&
+                event.getView().getTitle().startsWith("Профиль")) {
+                event.setCancelled(true); // Запрет забора предметов
+            }
+        }
+    }
+}
