@@ -1,0 +1,50 @@
+package org.wai.modules;
+
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+public class AutoRestartModule {
+    private final JavaPlugin plugin;
+    private int taskId;
+    private int lastRestartHour = -1;
+
+    public AutoRestartModule(JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void start() {
+        taskId = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+            ZoneId moscowZone = ZoneId.of("Europe/Moscow");
+            ZonedDateTime now = ZonedDateTime.now(moscowZone);
+            int hour = now.getHour();
+            int minute = now.getMinute();
+
+            if ((hour == 3 || hour == 12) && minute == 0) {
+                if (lastRestartHour != hour) {
+                    lastRestartHour = hour;
+                    Bukkit.getScheduler().runTask(plugin, this::restartServer);
+                }
+            }
+        }, 0L, 1200L).getTaskId();
+    }
+
+    private void restartServer() {
+        Bukkit.broadcastMessage("§cСервер будет перезагружен через 5 секунд по расписанию.");
+        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
+        }, 100L);
+    }
+
+    public void instantRestart() {
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            Bukkit.broadcastMessage("§cСервер будет перезагружен немедленно по команде администратора.");
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
+        });
+    }
+
+    public void stop() {
+        Bukkit.getScheduler().cancelTask(taskId);
+    }
+}
