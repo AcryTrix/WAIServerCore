@@ -7,11 +7,13 @@ import java.time.ZonedDateTime;
 
 public class AutoRestartModule {
     private final JavaPlugin plugin;
+    private final WebhookManager webhookManager;
     private int taskId;
     private int lastRestartHour = -1;
 
-    public AutoRestartModule(JavaPlugin plugin) {
+    public AutoRestartModule(JavaPlugin plugin, WebhookManager webhookManager) {
         this.plugin = plugin;
+        this.webhookManager = webhookManager;
     }
 
     public void start() {
@@ -31,7 +33,8 @@ public class AutoRestartModule {
     }
 
     private void restartServer() {
-        Bukkit.broadcastMessage("§cСервер будет перезагружен через 5 секунд по расписанию.");
+        webhookManager.sendRestartNotification();
+        Bukkit.broadcastMessage("§cServer will restart in 5 seconds...");
         Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
         }, 100L);

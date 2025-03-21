@@ -9,6 +9,7 @@ import org.wai.modules.MOTDModule;
 import org.wai.modules.SleepSkipModule;
 import org.wai.modules.PlayerInfoModule;
 import org.wai.modules.titles.TitlesModule;
+import org.wai.modules.WebhookManager;
 
 public class WAIServerCore extends JavaPlugin {
     private DatabaseManager dbManager;
@@ -19,6 +20,7 @@ public class WAIServerCore extends JavaPlugin {
     private SleepSkipModule sleepSkipModule;
     private PlayerInfoModule playerInfoModule;
     private TitlesModule titlesModule;
+    private WebhookManager webhookManager;
 
     @Override
     public void onEnable() {
@@ -26,7 +28,7 @@ public class WAIServerCore extends JavaPlugin {
 
         linkingModule = new LinkingModule(this, dbManager.getLinksConnection());
         altsModule = new AltsModule(this, dbManager.getAltsConnection());
-        autoRestartModule = new AutoRestartModule(this);
+        autoRestartModule = new AutoRestartModule(this, webhookManager);
         motdModule = new MOTDModule(this);
         sleepSkipModule = new SleepSkipModule(this);
         playerInfoModule = new PlayerInfoModule(this, dbManager.getPlayerInfoConnection());
@@ -39,6 +41,11 @@ public class WAIServerCore extends JavaPlugin {
         autoRestartModule.start();
         playerInfoModule.registerCommandsAndEvents();
         titlesModule.registerCommandsAndEvents();
+
+        saveDefaultConfig();
+        String webhookUrl = getConfig().getString("discord-webhook-url", "");
+        webhookManager = new WebhookManager(this, webhookUrl);
+        webhookManager.sendServerStartMessage();
 
         getLogger().info("WAIServerCore успешно запущен!");
     }
