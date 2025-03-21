@@ -16,13 +16,17 @@ public class WAIServerCore extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // Initialize database first
         dbManager = new DatabaseManager(getLogger());
+
+        // Initialize modules
         linkingModule = new LinkingModule(this, dbManager.getLinksConnection());
         altsModule = new AltsModule(this, dbManager.getAltsConnection());
         autoRestartModule = new AutoRestartModule(this);
         motdModule = new MOTDModule(this);
+        getServer().getPluginManager().registerEvents(motdModule, this);
 
-        motdModule.registerCommandsAndEvents();
+        // Register components
         altsModule.registerCommandsAndEvents();
         autoRestartModule.start();
 
@@ -31,6 +35,7 @@ public class WAIServerCore extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // Cleanup resources
         dbManager.closeConnections();
         if (autoRestartModule != null) {
             autoRestartModule.stop();

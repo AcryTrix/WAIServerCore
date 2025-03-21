@@ -1,75 +1,56 @@
 package org.wai.modules;
 
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.wai.WAIServerCore;
 import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
-public class MOTDModule implements Listener, CommandExecutor {
+public class MOTDModule implements Listener {
     private final WAIServerCore plugin;
-    private String motd;
-    private File configFile;
-    private YamlConfiguration config;
+    private List<String> messages;
+    private final Random random;
 
     public MOTDModule(WAIServerCore plugin) {
         this.plugin = plugin;
-        setupConfig();
-        loadConfig();
+        this.random = new Random();
+        loadMessagesFromResources();
     }
 
-    public void registerCommandsAndEvents() {
-        plugin.getCommand("setmotd").setExecutor(this);
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
-    }
+    private void loadMessagesFromResources() {
+        File configFile = new File(plugin.getDataFolder(), "motd.yml");
 
-    private void setupConfig() {
-        configFile = new File(plugin.getDataFolder(), "motd.yml");
-        if (!configFile.exists()) {
-            plugin.saveResource("motd.yml", false);
-        }
-        config = YamlConfiguration.loadConfiguration(configFile);
-    }
-
-    private void loadConfig() {
-        motd = config.getString("motd", "&aWelcome to the server!");
-    }
-
-    private void saveMotdToConfig(String newMotd) {
-        config.set("motd", newMotd);
         try {
-            config.save(configFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save MOTD to config: " + e.getMessage());
+            if (!configFile.exists()) {
+                plugin.getDataFolder().mkdirs();
+                try (InputStream is = plugin.getResource("motd.yml")) {
+                    Files.copy(is, configFile.toPath());
+                }
+            }
+
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+            messages = config.getStringList("messages");
+
+            if (messages.isEmpty()) {
+                messages = Collections.singletonList("&aDefault MOTD");
+            }
+
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error loading MOTD config: " + e.getMessage());
+            messages = Collections.singletonList("&cError in MOTD config");
         }
     }
 
     @EventHandler
     public void onServerListPing(ServerListPingEvent event) {
-        String formattedMotd = ChatColor.translateAlternateColorCodes('&', motd);
-        event.setMotd(formattedMotd);
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("wai.setmotd")) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
-            return true;
-        }
-        if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /setmotd <message>");
-            return true;
-        }
-        String newMotd = String.join(" ", args);
-        motd = newMotd;
-        saveMotdToConfig(newMotd);
-        sender.sendMessage(ChatColor.GREEN + "MOTD set to: " + ChatColor.RESET + newMotd);
-        return true;
+        String randomMessage = messages.get(random.nextInt(messages.size()));
+        event.setMotd(ChatColor.translateAlternateColorCodes('&', randomMessage));
     }
 }
