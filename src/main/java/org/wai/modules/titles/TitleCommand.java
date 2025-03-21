@@ -59,7 +59,6 @@ public class TitleCommand implements CommandExecutor {
             player.sendMessage(ChatColor.RED + "Usage: /titles set <title>");
             return;
         }
-
         if (titleManager.setPlayerTitle(player, args[1])) {
             player.sendMessage(ChatColor.GREEN + "Title set!");
         } else {

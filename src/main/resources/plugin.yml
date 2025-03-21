@@ -21,6 +21,10 @@ commands:
     description: Set the server's MOTD.
     usage: /setmotd <message>
     permission: setmotd.admin
+  lc:
+    description: Информация о игроке
+    usage: /lc <ник>
+    permission: lc.admin
   titles:
     description: Manage player titles
     usage: /titles [list|set|remove]

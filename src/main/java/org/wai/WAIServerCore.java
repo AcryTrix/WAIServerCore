@@ -5,7 +5,9 @@ import org.wai.database.DatabaseManager;
 import org.wai.modules.AltsModule;
 import org.wai.modules.AutoRestartModule;
 import org.wai.modules.LinkingModule;
-import org.wai.modules.ProfileModule;
+import org.wai.modules.MOTDModule;
+import org.wai.modules.SleepSkipModule;
+import org.wai.modules.PlayerInfoModule;
 import org.wai.modules.titles.TitlesModule;
 
 public class WAIServerCore extends JavaPlugin {
@@ -13,64 +15,42 @@ public class WAIServerCore extends JavaPlugin {
     private LinkingModule linkingModule;
     private AltsModule altsModule;
     private AutoRestartModule autoRestartModule;
+    private MOTDModule motdModule;
+    private SleepSkipModule sleepSkipModule;
+    private PlayerInfoModule playerInfoModule;
     private TitlesModule titlesModule;
-    private ProfileModule profileModule;
 
     @Override
     public void onEnable() {
-        try {
-            // Инициализация DatabaseManager
-            dbManager = new DatabaseManager(getLogger());
+        dbManager = new DatabaseManager(getLogger());
 
-            // Инициализация модулей
-            linkingModule = new LinkingModule(this, dbManager.getLinksConnection());
-            altsModule = new AltsModule(this, dbManager.getAltsConnection());
-            autoRestartModule = new AutoRestartModule(this);
-            titlesModule = new TitlesModule(this); // Инициализация TitlesModule
-            profileModule = new ProfileModule(this); // Инициализация ProfileModule
+        linkingModule = new LinkingModule(this, dbManager.getLinksConnection());
+        altsModule = new AltsModule(this, dbManager.getAltsConnection());
+        autoRestartModule = new AutoRestartModule(this);
+        motdModule = new MOTDModule(this);
+        sleepSkipModule = new SleepSkipModule(this);
+        playerInfoModule = new PlayerInfoModule(this, dbManager.getPlayerInfoConnection());
+        titlesModule = new TitlesModule(this);
 
-            // Логирование успешного запуска
-            getLogger().info("WAIServerCore enabled!");
-        } catch (Exception e) {
-            getLogger().severe("Ошибка при запуске WAIServerCore: " + e.getMessage());
-            e.printStackTrace();
-        }
+        getServer().getPluginManager().registerEvents(motdModule, this);
+        getServer().getPluginManager().registerEvents(sleepSkipModule, this);
+
+        altsModule.registerCommandsAndEvents();
+        autoRestartModule.start();
+        playerInfoModule.registerCommandsAndEvents();
+        titlesModule.registerCommandsAndEvents();
+
+        getLogger().info("WAIServerCore успешно запущен!");
     }
 
     @Override
     public void onDisable() {
-        // Закрытие соединений с базой данных
-        if (dbManager != null) {
-            dbManager.closeConnections();
-        }
-
-        // Остановка модуля AutoRestartModule
-        if (autoRestartModule != null) {
-            autoRestartModule.stop();
-        }
-
-        // Логирование отключения
-        getLogger().info("WAIServerCore disabled");
+        dbManager.closeConnections();
+        if (autoRestartModule != null) autoRestartModule.stop();
+        getLogger().info("WAIServerCore отключен");
     }
 
-    // Геттеры для модулей
     public TitlesModule getTitlesModule() {
         return titlesModule;
-    }
-
-    public ProfileModule getProfileModule() {
-        return profileModule;
-    }
-
-    public LinkingModule getLinkingModule() {
-        return linkingModule;
-    }
-
-    public AltsModule getAltsModule() {
-        return altsModule;
-    }
-
-    public AutoRestartModule getAutoRestartModule() {
-        return autoRestartModule;
     }
 }
