@@ -17,3 +17,7 @@ commands:
     description: Instantly restart server
     usage: /restartnow
     permission: autorestart.admin
+  setmotd:
+    description: Set the server's MOTD.
+    usage: /setmotd <message>
+    permission: setmotd.admin
