@@ -21,3 +21,12 @@ commands:
     description: Set the server's MOTD.
     usage: /setmotd <message>
     permission: setmotd.admin
+  titles:
+    description: Manage player titles
+    usage: /titles [list|set|remove]
+  tradetitles:
+    description: "Отправить запрос на обмен титулами или принять/отклонить запрос."
+    usage: |
+      /tradetitles <ник игрока> - отправить запрос на обмен.
+      /tradetitles accept - принять запрос.
+      /tradetitles decline - отклонить запрос.
