@@ -14,6 +14,6 @@ commands:
     permission: waiservercore.alts
     permission-message: "§cYou need permission 'unifiedplugin.alts'!"
   restartnow:
-    description: Немедленно перезагружает сервер
+    description: Instantly restart server
     usage: /restartnow
     permission: autorestart.admin
