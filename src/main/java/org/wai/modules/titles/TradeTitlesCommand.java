@@ -31,10 +31,13 @@ public class TradeTitlesCommand implements CommandExecutor {
         String action = args[0].toLowerCase();
         switch (action) {
             case "accept":
-                titleManager.acceptTradeRequest(player);
+                if (titleManager.acceptTradeRequest(player)) {
+                    player.sendMessage(ChatColor.GREEN + "Обмен успешно завершен!");
+                }
                 return true;
             case "decline":
                 titleManager.declineTradeRequest(player);
+                player.sendMessage(ChatColor.RED + "Вы отклонили запрос");
                 return true;
             default:
                 processRequest(player, args[0]);
@@ -55,10 +58,14 @@ public class TradeTitlesCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.RED + "Игрок не в сети!");
             return;
         }
-        if (target.equals(sender)) {
-            sender.sendMessage(ChatColor.RED + "Нельзя обменяться с собой!");
+
+        // Используем titleManager из поля класса
+        if (!titleManager.canTrade(sender) || !titleManager.canTrade(target)) {
+            sender.sendMessage(ChatColor.RED + "Обмен невозможен (проверьте настройки)!");
             return;
         }
+
+        // Отправляем запрос
         titleManager.sendTradeRequest(sender, target);
     }
 }

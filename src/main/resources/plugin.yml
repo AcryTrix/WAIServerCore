@@ -34,3 +34,13 @@ commands:
       /tradetitles <ник игрока> - отправить запрос на обмен.
       /tradetitles accept - принять запрос.
       /tradetitles decline - отклонить запрос.
+  settings:
+    description: Открывает меню настроек
+    usage: /settings
+  permissions:
+    wai.worldcontrol:
+      description: Доступ к управлению мирами
+      default: op
+  worldcontrol:
+    description: Управление доступом к мирам.
+    usage: /worldcontrol open|close

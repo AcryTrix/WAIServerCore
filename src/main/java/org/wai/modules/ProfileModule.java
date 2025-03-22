@@ -1,8 +1,10 @@
 package org.wai.modules;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.ChatColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,12 +14,13 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.wai.WAIServerCore;
 import org.wai.modules.titles.TitleManager;
 import org.wai.modules.titles.TitlesModule;
+import java.util.Arrays; // Это может быть, но сейчас не используется.
+import java.util.List;
+import java.util.ArrayList;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -54,37 +57,43 @@ public class ProfileModule implements Listener {
 
         ItemStack reputationItem = new ItemStack(Material.EMERALD);
         ItemMeta reputationMeta = reputationItem.getItemMeta();
-        reputationMeta.setDisplayName("Репутация");
-        reputationMeta.setLore(Arrays.asList("Нажмите, чтобы увидеть репутацию"));
-        reputationItem.setItemMeta(reputationMeta);
-        menu.setItem(10, reputationItem);
 
-        ItemStack addFriendItem = new ItemStack(Material.PAPER);
-        ItemMeta addFriendMeta = addFriendItem.getItemMeta();
-        addFriendMeta.setDisplayName("Добавить в друзья");
-        addFriendMeta.setLore(Arrays.asList("Нажмите, чтобы добавить в друзья"));
-        addFriendItem.setItemMeta(addFriendMeta);
-        menu.setItem(12, addFriendItem);
+        reputationMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&bРепутация"));
+
+        List<String> lore = new ArrayList<>();
+        lore.add(ChatColor.translateAlternateColorCodes('&', "&bНажмите, чтобы увидеть репутацию"));
+        reputationMeta.setLore(lore);
+
+        reputationItem.setItemMeta(reputationMeta);
+        menu.setItem(3, reputationItem);
 
         ItemStack infoItem = new ItemStack(Material.BOOK);
         ItemMeta infoMeta = infoItem.getItemMeta();
-        infoMeta.setDisplayName("Информация");
-        infoMeta.setLore(Arrays.asList(
-                "Никнейм: " + clickedPlayer.getName(),
-                "Время в игре: " + getPlayTime(clickedPlayer),
-                "Дата присоединения: " + getJoinDate(clickedPlayer)
-        ));
+        infoMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&b&lИнформация о вашем профиле")); // Золотой цвет для названия
+
+        List<String> lore3 = new ArrayList<>();
+        lore3.add(ChatColor.translateAlternateColorCodes('&', "&b&l➜ &fНикнейм: &b" + clickedPlayer.getName()));
+        lore3.add(ChatColor.translateAlternateColorCodes('&', "&b&l➜ &fВремя в игре: &b" + getPlayTime(clickedPlayer)));
+        lore3.add(ChatColor.translateAlternateColorCodes('&', "&b&l➜ &fДата присоединения: &b" + getJoinDate(clickedPlayer)));
+
+        infoMeta.setLore(lore3);
         infoItem.setItemMeta(infoMeta);
-        menu.setItem(14, infoItem);
+        menu.setItem(13, infoItem);
 
         ItemStack titleExchangeItem = new ItemStack(Material.NAME_TAG);
         ItemMeta titleExchangeMeta = titleExchangeItem.getItemMeta();
-        titleExchangeMeta.setDisplayName("Обменяться титулами");
-        titleExchangeMeta.setLore(Arrays.asList("Нажмите, чтобы предложить обмен титулами"));
-        titleExchangeItem.setItemMeta(titleExchangeMeta);
-        menu.setItem(16, titleExchangeItem);
 
-        ItemStack fillerItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        titleExchangeMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&b&LОбменяться титулами"));
+
+        List<String> lore2 = new ArrayList<>();
+        lore2.add(ChatColor.translateAlternateColorCodes('&', "&7Нажмите, чтобы предложить &bобмен титулами"));
+        lore2.add(ChatColor.translateAlternateColorCodes('&', "&bВнимание: &7если у вас нет титула или у другого игрока, обмен &cневозможен&7."));
+        titleExchangeMeta.setLore(lore2);
+
+        titleExchangeItem.setItemMeta(titleExchangeMeta);
+        menu.setItem(5, titleExchangeItem);
+
+        ItemStack fillerItem = new ItemStack(Material.BLUE_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = fillerItem.getItemMeta();
         fillerMeta.setDisplayName(" ");
         fillerItem.setItemMeta(fillerMeta);
