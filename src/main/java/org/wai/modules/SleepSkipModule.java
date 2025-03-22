@@ -25,7 +25,6 @@ public class SleepSkipModule implements Listener {
     public void onBedEnter(PlayerBedEnterEvent event) {
         World world = event.getPlayer().getWorld();
         if (world.getTime() < 12541) return;
-
         int sleepers = sleepingPlayers.getOrDefault(world, 0) + 1;
         sleepingPlayers.put(world, sleepers);
         scheduleDelayedCheck(world);
@@ -42,27 +41,20 @@ public class SleepSkipModule implements Listener {
     }
 
     private void updateSleepCounter(World world) {
-        int current = (int) world.getPlayers().stream()
-                .filter(Player::isSleeping)
-                .count();
-
+        int current = (int) world.getPlayers().stream().filter(Player::isSleeping).count();
         sleepingPlayers.put(world, current);
         scheduleDelayedCheck(world);
     }
 
     private void scheduleDelayedCheck(World world) {
-        // Отменяем предыдущую запланированную задачу для этого мира
         if (scheduledTasks.containsKey(world)) {
             plugin.getServer().getScheduler().cancelTask(scheduledTasks.get(world));
             scheduledTasks.remove(world);
         }
-
-        // Планируем новую проверку через 3 секунды (60 тиков)
         int taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
             checkSleepConditions(world);
             scheduledTasks.remove(world);
         }, 60L);
-
         scheduledTasks.put(world, taskId);
     }
 
@@ -71,23 +63,18 @@ public class SleepSkipModule implements Listener {
             sleepingPlayers.put(world, 0);
             return;
         }
-
         int onlinePlayers = world.getPlayers().size();
         if (onlinePlayers == 0) return;
-
         int required = (int) Math.ceil(onlinePlayers / 2.0);
         int sleeping = sleepingPlayers.getOrDefault(world, 0);
-
-        // Отправляем сообщение в action bar
-        String message = String.format("§e%d/%d players sleeping", sleeping, required);
+        String message = String.format("§e%d/%d игроков спят", sleeping, required);
         world.getPlayers().forEach(p -> p.sendActionBar(message));
-
         if (sleeping >= required) {
             world.setTime(0);
             world.setStorm(false);
             world.setThundering(false);
             sleepingPlayers.put(world, 0);
-            world.getPlayers().forEach(p -> p.sendActionBar("§aSkipping night!"));
+            world.getPlayers().forEach(p -> p.sendActionBar("§aНочь пропущена!"));
         }
     }
 }

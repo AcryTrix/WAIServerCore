@@ -18,7 +18,7 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         String playerTitle = titleManager.getPlayerTitle(player);
         if (playerTitle != null) {
-            player.sendMessage("Ваш текущий титул: " + playerTitle);
+            player.sendMessage("§eВаш текущий титул: §f" + playerTitle);
         }
     }
 

@@ -22,7 +22,6 @@ public class AutoRestartModule {
             ZonedDateTime now = ZonedDateTime.now(moscowZone);
             int hour = now.getHour();
             int minute = now.getMinute();
-
             if ((hour == 3 || hour == 12) && minute == 0) {
                 if (lastRestartHour != hour) {
                     lastRestartHour = hour;
@@ -34,7 +33,7 @@ public class AutoRestartModule {
 
     private void restartServer() {
         webhookManager.sendRestartNotification();
-        Bukkit.broadcastMessage("§cServer will restart in 5 seconds...");
+        Bukkit.broadcastMessage("§cСервер будет перезапущен через 5 секунд...");
         Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
         }, 100L);
@@ -42,7 +41,7 @@ public class AutoRestartModule {
 
     public void instantRestart() {
         Bukkit.getScheduler().runTask(plugin, () -> {
-            Bukkit.broadcastMessage("§cСервер будет перезагружен немедленно по команде администратора.");
+            Bukkit.broadcastMessage("§cСервер перезапускается немедленно по команде!");
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
         });
     }

@@ -16,17 +16,14 @@ public class TitleCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Only for players!");
+            sender.sendMessage("§cКоманда только для игроков!");
             return true;
         }
-
         Player player = (Player) sender;
-
         if (args.length == 0) {
             sendHelp(player);
             return true;
         }
-
         switch (args[0].toLowerCase()) {
             case "list":
                 listTitles(player);
@@ -42,32 +39,31 @@ public class TitleCommand implements CommandExecutor {
     }
 
     private void sendHelp(Player player) {
-        player.sendMessage(ChatColor.GOLD + "Titles commands:");
-        player.sendMessage("/titles list - Show available titles");
-        player.sendMessage("/titles set <name> - Set your title");
-        player.sendMessage("/titles remove - Remove current title");
+        player.sendMessage(ChatColor.GOLD + "Команды титулов:");
+        player.sendMessage("§e/titles list §7- Показать доступные титулы");
+        player.sendMessage("§e/titles set <название> §7- Установить титул");
+        player.sendMessage("§e/titles remove §7- Удалить текущий титул");
     }
 
     private void listTitles(Player player) {
-        player.sendMessage(ChatColor.YELLOW + "Available titles:");
-        titleManager.getAvailableTitles().forEach(title ->
-                player.sendMessage(ChatColor.GREEN + " - " + title));
+        player.sendMessage(ChatColor.YELLOW + "Доступные титулы:");
+        titleManager.getAvailableTitles().forEach(title -> player.sendMessage(ChatColor.GREEN + " - " + title));
     }
 
     private void setTitle(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage(ChatColor.RED + "Usage: /titles set <title>");
+            player.sendMessage(ChatColor.RED + "Используйте: /titles set <титул>");
             return;
         }
         if (titleManager.setPlayerTitle(player, args[1])) {
-            player.sendMessage(ChatColor.GREEN + "Title set!");
+            player.sendMessage(ChatColor.GREEN + "Титул успешно установлен!");
         } else {
-            player.sendMessage(ChatColor.RED + "Title not found or no permission!");
+            player.sendMessage(ChatColor.RED + "Титул не найден или нет прав!");
         }
     }
 
     private void removeTitle(Player player) {
         titleManager.removeTitle(player);
-        player.sendMessage(ChatColor.GREEN + "Title removed!");
+        player.sendMessage(ChatColor.GREEN + "Титул успешно удалён!");
     }
 }

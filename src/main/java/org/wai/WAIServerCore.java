@@ -24,8 +24,10 @@ public class WAIServerCore extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+        String webhookUrl = getConfig().getString("discord-webhook-url", "");
+        webhookManager = new WebhookManager(this, webhookUrl);
         dbManager = new DatabaseManager(getLogger());
-
         linkingModule = new LinkingModule(this, dbManager.getLinksConnection());
         altsModule = new AltsModule(this, dbManager.getAltsConnection());
         autoRestartModule = new AutoRestartModule(this, webhookManager);
@@ -33,28 +35,21 @@ public class WAIServerCore extends JavaPlugin {
         sleepSkipModule = new SleepSkipModule(this);
         playerInfoModule = new PlayerInfoModule(this, dbManager.getPlayerInfoConnection());
         titlesModule = new TitlesModule(this);
-
         getServer().getPluginManager().registerEvents(motdModule, this);
         getServer().getPluginManager().registerEvents(sleepSkipModule, this);
-
         altsModule.registerCommandsAndEvents();
         autoRestartModule.start();
         playerInfoModule.registerCommandsAndEvents();
         titlesModule.registerCommandsAndEvents();
-
-        saveDefaultConfig();
-        String webhookUrl = getConfig().getString("discord-webhook-url", "");
-        webhookManager = new WebhookManager(this, webhookUrl);
         webhookManager.sendServerStartMessage();
-
-        getLogger().info("WAIServerCore успешно запущен!");
+        getLogger().info("§aWAIServerCore успешно запущен!");
     }
 
     @Override
     public void onDisable() {
         dbManager.closeConnections();
         if (autoRestartModule != null) autoRestartModule.stop();
-        getLogger().info("WAIServerCore отключен");
+        getLogger().info("§cWAIServerCore отключен");
     }
 
     public TitlesModule getTitlesModule() {

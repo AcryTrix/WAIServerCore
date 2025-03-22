@@ -30,85 +30,75 @@ public class LinkingModule {
 
     private void handleLinkCommand(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Command for players only!");
+            sender.sendMessage("§cКоманда только для игроков!");
             return;
         }
-
         Player player = (Player) sender;
         if (args.length != 1) {
-            player.sendMessage("Usage: /link <code>");
+            player.sendMessage("§cИспользуйте: /link <код>");
             return;
         }
-
         try {
             connection.setAutoCommit(false);
             PreparedStatement checkCode = connection.prepareStatement("SELECT discord_id FROM codes WHERE code = ?");
             checkCode.setString(1, args[0]);
             ResultSet result = checkCode.executeQuery();
-
             if (!result.next()) {
-                player.sendMessage("Invalid code!");
+                player.sendMessage("§cНеверный код!");
                 connection.rollback();
                 return;
             }
-
             String discordId = result.getString("discord_id");
             PreparedStatement checkLink = connection.prepareStatement("SELECT minecraft_username FROM linked_accounts WHERE discord_id = ?");
             checkLink.setString(1, discordId);
             ResultSet linkResult = checkLink.executeQuery();
-
             if (linkResult.next()) {
-                player.sendMessage("Account already linked!");
+                player.sendMessage("§cЭтот Discord уже привязан!");
                 connection.rollback();
                 return;
             }
-
             PreparedStatement deleteCode = connection.prepareStatement("DELETE FROM codes WHERE code = ?");
             deleteCode.setString(1, args[0]);
             deleteCode.executeUpdate();
-
             PreparedStatement insertLink = connection.prepareStatement("INSERT INTO linked_accounts (discord_id, minecraft_username) VALUES (?, ?)");
             insertLink.setString(1, discordId);
             insertLink.setString(2, player.getName());
             insertLink.executeUpdate();
-
             connection.commit();
-            player.sendMessage("§aLink successful!");
+            player.sendMessage("§aАккаунт успешно привязан!");
         } catch (SQLException e) {
             try {
                 connection.rollback();
-                player.sendMessage("§cError: " + e.getMessage());
+                player.sendMessage("§cОшибка привязки: " + e.getMessage());
             } catch (SQLException ex) {
-                plugin.getLogger().severe("Rollback failed: " + ex.getMessage());
+                plugin.getLogger().severe("Ошибка отката: " + ex.getMessage());
             }
         } finally {
             try {
                 connection.setAutoCommit(true);
             } catch (SQLException e) {
-                plugin.getLogger().severe("Auto-commit reset failed");
+                plugin.getLogger().severe("Ошибка сброса транзакции");
             }
         }
     }
 
     private void handleLinkAdminCommand(CommandSender sender, String[] args) {
         if (!sender.hasPermission("link.admin")) {
-            sender.sendMessage("§cNo permission!");
+            sender.sendMessage("§cНет прав!");
             return;
         }
-
         if (args.length != 2) {
-            sender.sendMessage("Usage: /linkadmin <player> <discord_id>");
+            sender.sendMessage("§cИспользуйте: /linkadmin <игрок> <discord_id>");
             return;
         }
-
         try {
             PreparedStatement ps = connection.prepareStatement("INSERT OR REPLACE INTO linked_accounts (discord_id, minecraft_username) VALUES (?, ?)");
             ps.setString(1, args[1]);
             ps.setString(2, args[0]);
             ps.executeUpdate();
-            sender.sendMessage("§aLinked: " + args[0] + " → " + args[1]);
+            sender.sendMessage("§aПривязка выполнена: " + args[0] + " → " + args[1]);
         } catch (SQLException e) {
-            sender.sendMessage("§cError: " + e.getMessage());
+            sender.sendMessage("§cОшибка: " + e.getMessage());
         }
     }
 }

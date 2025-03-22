@@ -36,16 +36,15 @@ public class AltsModule implements Listener {
             ps.setString(3, player.getAddress().getAddress().getHostAddress());
             ps.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Player data save error");
+            plugin.getLogger().severe("Ошибка сохранения данных игрока");
         }
     }
 
     private boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!sender.hasPermission("waiservercore.alts")) {
-            sender.sendMessage(ChatColor.RED + "No permission!");
+            sender.sendMessage(ChatColor.RED + "Нет прав!");
             return true;
         }
-
         if (args.length == 0) {
             handleOnlineAlts(sender);
         } else {
@@ -57,15 +56,11 @@ public class AltsModule implements Listener {
     private void handleOnlineAlts(CommandSender sender) {
         Set<String> processedIPs = new HashSet<>();
         boolean foundAlts = false;
-
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             if (onlinePlayer.getAddress() == null) continue;
-
             String ip = onlinePlayer.getAddress().getAddress().getHostAddress();
             if (processedIPs.contains(ip)) continue;
-
             processedIPs.add(ip);
-
             try {
                 List<String> names = getNamesByIP(ip);
                 if (names.size() > 1) {
@@ -73,13 +68,12 @@ public class AltsModule implements Listener {
                     sender.sendMessage(formatAltMessage(ip, names));
                 }
             } catch (SQLException e) {
-                sender.sendMessage(ChatColor.RED + "Database error");
+                sender.sendMessage(ChatColor.RED + "Ошибка базы данных");
                 return;
             }
         }
-
         if (!foundAlts) {
-            sender.sendMessage(ChatColor.YELLOW + "No alts found online.");
+            sender.sendMessage(ChatColor.YELLOW + "Альты среди игроков онлайн не найдены.");
         }
     }
 
@@ -87,19 +81,17 @@ public class AltsModule implements Listener {
         try {
             String targetIP = getIPByName(targetName);
             if (targetIP == null) {
-                sender.sendMessage(ChatColor.RED + "Player not found");
+                sender.sendMessage(ChatColor.RED + "Игрок " + targetName + " не найден");
                 return;
             }
-
             List<String> names = getNamesByIP(targetIP);
             if (names.size() <= 1) {
-                sender.sendMessage(ChatColor.YELLOW + "No alts found for " + targetName);
+                sender.sendMessage(ChatColor.YELLOW + "Альты для " + targetName + " не найдены");
                 return;
             }
-
             sender.sendMessage(formatAltMessage(targetIP, names));
         } catch (SQLException e) {
-            sender.sendMessage(ChatColor.RED + "Database error");
+            sender.sendMessage(ChatColor.RED + "Ошибка базы данных");
         }
     }
 
@@ -124,7 +116,6 @@ public class AltsModule implements Listener {
     private String formatAltMessage(String ip, List<String> names) {
         StringBuilder sb = new StringBuilder();
         sb.append(ChatColor.YELLOW).append(ip).append(" - ");
-
         for (String name : names) {
             Player player = Bukkit.getPlayerExact(name);
             if (player != null && player.isOnline()) {
@@ -134,7 +125,6 @@ public class AltsModule implements Listener {
             }
             sb.append(ChatColor.YELLOW).append(", ");
         }
-
         if (sb.length() > 0) {
             sb.setLength(sb.length() - 2);
         }

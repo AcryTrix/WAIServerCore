@@ -26,7 +26,6 @@ public class MOTDModule implements Listener {
 
     private void loadMessagesFromResources() {
         File configFile = new File(plugin.getDataFolder(), "motd.yml");
-
         try {
             if (!configFile.exists()) {
                 plugin.getDataFolder().mkdirs();
@@ -34,17 +33,14 @@ public class MOTDModule implements Listener {
                     Files.copy(is, configFile.toPath());
                 }
             }
-
             YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
             messages = config.getStringList("messages");
-
             if (messages.isEmpty()) {
-                messages = Collections.singletonList("&aDefault MOTD");
+                messages = Collections.singletonList("&aДобро пожаловать на сервер!");
             }
-
         } catch (Exception e) {
-            plugin.getLogger().severe("Error loading MOTD config: " + e.getMessage());
-            messages = Collections.singletonList("&cError in MOTD config");
+            plugin.getLogger().severe("Ошибка загрузки MOTD: " + e.getMessage());
+            messages = Collections.singletonList("&cОшибка конфигурации MOTD");
         }
     }
 

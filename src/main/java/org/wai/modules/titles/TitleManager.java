@@ -58,49 +58,40 @@ public class TitleManager {
     }
 
     public void removeTitle(Player player) {
-        Bukkit.getScheduler().runTask(plugin, () ->
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
-                        "lp user " + player.getName() + " meta removesuffix"));
+        Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " meta removesuffix"));
         plugin.getConfig().set("players." + player.getUniqueId(), null);
         plugin.saveConfig();
     }
 
     public void sendTradeRequest(Player sender, Player target) {
         tradeRequests.put(target, new TradeRequest(sender, target));
-        TextComponent message = new TextComponent(ChatColor.GOLD + "➜ " + ChatColor.YELLOW +
-                sender.getName() + ChatColor.GOLD + " предлагает обмен титулами ");
-
+        TextComponent message = new TextComponent(ChatColor.GOLD + "➜ " + ChatColor.YELLOW + sender.getName() + ChatColor.GOLD + " предлагает обмен титулами ");
         TextComponent acceptButton = new TextComponent(ChatColor.GREEN + "[✅ Принять]");
         acceptButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tradetitles accept"));
-        acceptButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new Text(new net.md_5.bungee.api.chat.ComponentBuilder("Принять обмен").color(
-                        net.md_5.bungee.api.ChatColor.GREEN).create())));
-
+        acceptButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§aПринять обмен")));
         TextComponent declineButton = new TextComponent(ChatColor.RED + "[❌ Отклонить]");
         declineButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tradetitles decline"));
-        declineButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new Text(new net.md_5.bungee.api.chat.ComponentBuilder("Отклонить запрос").color(
-                        net.md_5.bungee.api.ChatColor.RED).create())));
-
+        declineButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§cОтклонить запрос")));
         message.addExtra(acceptButton);
         message.addExtra(declineButton);
         target.spigot().sendMessage(message);
-        sender.sendMessage(ChatColor.GREEN + "Запрос отправлен игроку " + target.getName());
+        sender.sendMessage(ChatColor.GREEN + "Запрос на обмен отправлен " + target.getName() + "!");
     }
 
     public boolean acceptTradeRequest(Player target) {
         TradeRequest request = tradeRequests.remove(target);
         if (request == null) {
-            target.sendMessage(ChatColor.RED + "Нет активных запросов");
+            target.sendMessage(ChatColor.RED + "Нет активных запросов на обмен!");
             return false;
         }
         Player sender = request.getSender();
         if (!sender.isOnline()) {
-            target.sendMessage(ChatColor.RED + "Игрок вышел");
+            target.sendMessage(ChatColor.RED + "Игрок " + sender.getName() + " вышел из сети!");
             return false;
         }
         if (tradeTitles(sender, target)) {
-            sender.sendMessage(ChatColor.GREEN + "✔ " + target.getName() + " принял ваш обмен");
+            sender.sendMessage(ChatColor.GREEN + "✔ " + target.getName() + " принял ваш запрос на обмен!");
+            target.sendMessage(ChatColor.GREEN + "✔ Вы успешно обменялись титулами с " + sender.getName() + "!");
             return true;
         }
         return false;
@@ -109,15 +100,13 @@ public class TitleManager {
     public void declineTradeRequest(Player target) {
         TradeRequest request = tradeRequests.remove(target);
         if (request != null) {
-            request.getSender().sendMessage(ChatColor.GOLD + "✖ " + target.getName() + " отклонил обмен");
+            request.getSender().sendMessage(ChatColor.GOLD + "✖ " + target.getName() + " отклонил ваш запрос на обмен");
+            target.sendMessage(ChatColor.YELLOW + "Вы отклонили запрос на обмен от " + request.getSender().getName());
         }
     }
 
     private void setLuckPermsSuffix(Player player, String suffix, int priority) {
-        Bukkit.getScheduler().runTask(plugin, () ->
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
-                        String.format("lp user %s meta setsuffix %d \"%s\"",
-                                player.getName(), priority, suffix.replace("\"", "\\\""))));
+        Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("lp user %s meta setsuffix %d \"%s\"", player.getName(), priority, suffix.replace("\"", "\\\""))));
     }
 
     public boolean tradeTitles(Player player1, Player player2) {
@@ -132,18 +121,5 @@ public class TitleManager {
     public void savePlayerData(Player player) {
         plugin.getConfig().set("players." + player.getUniqueId(), getPlayerTitle(player));
         plugin.saveConfig();
-    }
-
-    private static class TradeRequest {
-        private final Player sender;
-        private final Player target;
-
-        public TradeRequest(Player sender, Player target) {
-            this.sender = sender;
-            this.target = target;
-        }
-
-        public Player getSender() { return sender; }
-        public Player getTarget() { return target; }
     }
 }
