@@ -13,27 +13,21 @@ import org.wai.modules.WebhookManager;
 
 public class WAIServerCore extends JavaPlugin {
     private DatabaseManager dbManager;
-    private LinkingModule linkingModule;
-    private AltsModule altsModule;
     private AutoRestartModule autoRestartModule;
-    private MOTDModule motdModule;
-    private SleepSkipModule sleepSkipModule;
-    private PlayerInfoModule playerInfoModule;
     private TitlesModule titlesModule;
-    private WebhookManager webhookManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         String webhookUrl = getConfig().getString("discord-webhook-url", "");
-        webhookManager = new WebhookManager(this, webhookUrl);
+        WebhookManager webhookManager = new WebhookManager(this, webhookUrl);
         dbManager = new DatabaseManager(getLogger());
-        linkingModule = new LinkingModule(this, dbManager.getLinksConnection());
-        altsModule = new AltsModule(this, dbManager.getAltsConnection());
+        LinkingModule linkingModule = new LinkingModule(this, dbManager.getLinksConnection());
+        AltsModule altsModule = new AltsModule(this, dbManager.getAltsConnection());
         autoRestartModule = new AutoRestartModule(this, webhookManager);
-        motdModule = new MOTDModule(this);
-        sleepSkipModule = new SleepSkipModule(this);
-        playerInfoModule = new PlayerInfoModule(this, dbManager.getPlayerInfoConnection());
+        MOTDModule motdModule = new MOTDModule(this);
+        SleepSkipModule sleepSkipModule = new SleepSkipModule(this);
+        PlayerInfoModule playerInfoModule = new PlayerInfoModule(this, dbManager.getPlayerInfoConnection());
         titlesModule = new TitlesModule(this);
         getServer().getPluginManager().registerEvents(motdModule, this);
         getServer().getPluginManager().registerEvents(sleepSkipModule, this);
