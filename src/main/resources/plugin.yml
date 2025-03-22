@@ -37,10 +37,16 @@ commands:
   settings:
     description: Открывает меню настроек
     usage: /settings
-  permissions:
-    wai.worldcontrol:
-      description: Доступ к управлению мирами
-      default: op
+    permission: settings.admin
   worldcontrol:
     description: Управление доступом к мирам.
     usage: /worldcontrol open|close
+    permission: worldcontrol.admin
+  mon:
+    description: Активирует режим модератора
+    usage: /mon <code>
+    permission: mon.admin
+  moff:
+    description: Отключает режим модератора
+    usage: /moff <code>
+    permission: moff.admin

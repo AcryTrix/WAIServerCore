@@ -17,17 +17,17 @@ public class WAIServerCore extends JavaPlugin {
     private PlayerInfoModule playerInfoModule;
     private TitlesModule titlesModule;
     private WebhookManager webhookManager;
+    private WebhookManager moderWebhookManager;
     private ProfileModule profileModule;
-    private SettingsMenu settingsMenu; // Модуль меню настроек
+    private SettingsMenu settingsMenu;
     private WorldControlModule worldControlModule;
     private ElytraEnchantControlModule elytraControlModule;
+    private ModerActivationModule moderActivationModule;
 
     @Override
     public void onEnable() {
-        // Инициализация базы данных
         dbManager = new DatabaseManager(getLogger());
 
-        // Инициализация модулей
         linkingModule = new LinkingModule(this, dbManager.getLinksConnection());
         altsModule = new AltsModule(this, dbManager.getAltsConnection());
         motdModule = new MOTDModule(this);
@@ -38,41 +38,39 @@ public class WAIServerCore extends JavaPlugin {
         worldControlModule = new WorldControlModule(this);
         elytraControlModule = new ElytraEnchantControlModule(this);
 
-        // Инициализация WebhookManager
         saveDefaultConfig();
         String webhookUrl = getConfig().getString("discord-webhook-url", "");
+        String moderWebhookUrl = getConfig().getString("moder-webhook-url", "");
         webhookManager = new WebhookManager(this, webhookUrl);
-        autoRestartModule = new AutoRestartModule(this, webhookManager);
-        worldControlModule.registerCommandsAndEvents();
+        moderWebhookManager = new WebhookManager(this, moderWebhookUrl);
 
-        // Инициализация меню настроек
+        autoRestartModule = new AutoRestartModule(this, webhookManager);
+        moderActivationModule = new ModerActivationModule(this, moderWebhookManager);
+
         settingsMenu = new SettingsMenu(this, titlesModule.getTitleManager());
 
-        // Регистрация событий
         getServer().getPluginManager().registerEvents(motdModule, this);
         getServer().getPluginManager().registerEvents(sleepSkipModule, this);
 
-        // Регистрация команд
         altsModule.registerCommandsAndEvents();
         autoRestartModule.start();
         playerInfoModule.registerCommandsAndEvents();
         titlesModule.registerCommandsAndEvents();
-        registerSettingsCommand(); // Регистрация /settings
+        worldControlModule.registerCommandsAndEvents();
+        moderActivationModule.registerCommands();
+        registerSettingsCommand();
 
-        // Уведомление о запуске
         webhookManager.sendServerStartMessage();
         getLogger().info("WAIServerCore успешно запущен!");
     }
 
     @Override
     public void onDisable() {
-        // Завершение работы
         dbManager.closeConnections();
         if (autoRestartModule != null) autoRestartModule.stop();
         getLogger().info("WAIServerCore отключен");
     }
 
-    // Регистрация команды /settings
     private void registerSettingsCommand() {
         getCommand("settings").setExecutor((sender, command, label, args) -> {
             if (sender instanceof Player) {

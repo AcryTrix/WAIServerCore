@@ -9,3 +9,8 @@ titles:
     suffix: "&c✦"
     priority: 90
     permission: titles.title.mage
+  brimstone:
+    symbol: " "
+    suffix: "&c🜏"
+    priority: 110
+    permission: titles.title.brimstone
