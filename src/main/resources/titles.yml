@@ -1,16 +1,19 @@
 titles:
   warrior:
-    symbol: " "
-    suffix: "&c✪"
+    suffix: "⚔"
+    symbol: "⚔"
     priority: 100
+    material: DIAMOND_SWORD
     permission: titles.title.warrior
   mage:
+    suffix: "✨"
     symbol: " "
-    suffix: "&c✦"
     priority: 90
+    material: BLAZE_ROD
     permission: titles.title.mage
   brimstone:
     symbol: " "
     suffix: "&c🜏"
     priority: 110
+    material: GOLDEN_CARROT
     permission: titles.title.brimstone

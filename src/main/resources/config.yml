@@ -1,5 +1,16 @@
 # Настройки вебхука
 webhook-url: "https://discord.com/api/webhooks/1352737957068537978/8SRfxyPhIBXkquVMPHlM0gaPc77_I0mtCT4ZZqNVGB4TXiq4jt_nNgULX9at0a4o5Eim"
-discord-link: "https://discord.gg/ваша_ссылка"
-
-# Другие настройки плагина (если есть)
+settings-menu:
+  title: "§6Настройки"
+  discord-link: "https://discord.gg/example"
+  fill-empty-slots: true
+  titles-menu: # Настройки меню титулов
+    title: "§6Управление титулами"
+    size: 36 # Размер инвентаря (инвентарь = 36 слотов)
+    item-name: "§a{title}" # {title} будет заменено на имя титула
+    available-title-item: GREEN_TERRACOTTA # Материал для доступного титула
+    unavailable-title-item: BARRIER # Материал для недоступного титула
+    permissions: # Список титулов и связанных с ними прав
+      warrior: titles.title.warrior
+      mage: titles.title.mage
+      brimstone: titles.title.brimstone

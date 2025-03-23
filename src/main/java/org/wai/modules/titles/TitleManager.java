@@ -39,7 +39,6 @@ public class TitleManager {
         return settingsConfig.getBoolean("players." + player.getUniqueId() + ".allow-trade", true);
     }
 
-
     public boolean canSendTradeRequest(Player player) {
         return settingsConfig.getBoolean("players." + player.getUniqueId() + ".allow-trade", true);
     }
@@ -47,7 +46,7 @@ public class TitleManager {
     public void toggleTradeSetting(Player player) {
         boolean newState = !canTrade(player);
         settingsConfig.set("players." + player.getUniqueId() + ".allow-trade", newState);
-        saveSettings();
+        saveSettings(); // Сохранение настроек в settings.yml
 
         // Удаляем все активные запросы с участием этого игрока
         cleanupRequestsForPlayer(player);
