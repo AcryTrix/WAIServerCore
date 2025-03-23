@@ -3,9 +3,7 @@ titles:
     symbol: " "
     suffix: "&c✪"
     priority: 100
-    permission: titles.title.warrior
   mage:
     symbol: " "
     suffix: "&c✦"
     priority: 90
-    permission: titles.title.mage

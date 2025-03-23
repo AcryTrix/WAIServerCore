@@ -1,7 +1,5 @@
 package org.wai.modules.titles;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -16,46 +14,40 @@ public class TradeTitlesCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Команда только для игроков!");
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("§cЭта команда только для игроков!");
             return true;
         }
-        Player player = (Player) sender;
+
         if (args.length == 0) {
-            sendUsage(player);
+            sendHelp(player);
             return true;
         }
-        String action = args[0].toLowerCase();
-        switch (action) {
-            case "accept":
-                titleManager.acceptTradeRequest(player);
-                return true;
-            case "decline":
-                titleManager.declineTradeRequest(player);
-                return true;
-            default:
-                processRequest(player, args[0]);
-                return true;
+
+        switch (args[0].toLowerCase()) {
+            case "accept" -> titleManager.acceptTradeRequest(player);
+            case "decline" -> titleManager.declineTradeRequest(player);
+            case "player" -> {
+                if (args.length < 2) {
+                    player.sendMessage("§cУкажите игрока: /tradetitles player <ник>");
+                    return true;
+                }
+                Player target = player.getServer().getPlayer(args[1]);
+                if (target == null) {
+                    player.sendMessage("§cИгрок " + args[1] + " не найден!");
+                    return true;
+                }
+                titleManager.sendTradeRequest(player, target);
+            }
+            default -> sendHelp(player);
         }
+        return true;
     }
 
-    private void sendUsage(Player player) {
-        player.sendMessage(ChatColor.GOLD + "Команды обмена титулами:");
-        player.sendMessage("§e/tradetitles <ник> §7- Отправить запрос на обмен");
-        player.sendMessage("§e/tradetitles accept §7- Принять запрос");
-        player.sendMessage("§e/tradetitles decline §7- Отклонить запрос");
-    }
-
-    private void processRequest(Player sender, String targetName) {
-        Player target = Bukkit.getPlayer(targetName);
-        if (target == null) {
-            sender.sendMessage(ChatColor.RED + "Игрок " + targetName + " не в сети!");
-            return;
-        }
-        if (target.equals(sender)) {
-            sender.sendMessage(ChatColor.RED + "Нельзя обменяться титулами с собой!");
-            return;
-        }
-        titleManager.sendTradeRequest(sender, target);
+    private void sendHelp(Player player) {
+        player.sendMessage("§eКоманды обмена титулами:");
+        player.sendMessage("§7/tradetitles player <ник> §f- Предложить обмен");
+        player.sendMessage("§7/tradetitles accept §f- Принять запрос");
+        player.sendMessage("§7/tradetitles decline §f- Отклонить запрос");
     }
 }

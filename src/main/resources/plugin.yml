@@ -1,36 +1,59 @@
 name: WAIServerCore
-version: '1.0'
+version: ${version}
 main: org.wai.WAIServerCore
-api-version: '1.21'
+api-version: 1.21
+author: AcryTrix, Xiwizloves
+description: Core plugin for WAI server functionality
+
 commands:
-  link:
-    description: Link Minecraft account with Discord
-  linkadmin:
-    description: Admin account linking tool
-    permission: waiservercore.admin
-    permission-message: "§cYou need permission 'unifiedplugin.admin'!"
   alts:
-    description: Check player's alternate accounts
-    permission: waiservercore.alts
-    permission-message: "§cYou need permission 'unifiedplugin.alts'!"
-  restartnow:
-    description: Instantly restart server
-    usage: /restartnow
-    permission: autorestart.admin
-  setmotd:
-    description: Set the server's MOTD.
-    usage: /setmotd <message>
-    permission: setmotd.admin
+    description: Показать альты игроков
+    usage: /<command> [игрок]
+  settings:
+    description: Открыть меню настроек
+    usage: /<command>
+  link:
+    description: Привязать Discord аккаунт
+    usage: /<command> <код>
+  linkadmin:
+    description: Привязать аккаунт вручную (админ)
+    usage: /<command> <игрок> <discord_id>
+  mon:
+    description: Активировать режим модератора
+    usage: /<command> <код>
+  moff:
+    description: Деактивировать режим модератора
+    usage: /<command>
   lc:
-    description: Информация о игроке
-    usage: /lc <ник>
-    permission: lc.admin
+    description: Показать информацию об игроке
+    usage: /<command> <ник>
+  worldcontrol:
+    description: Управление доступом к мирам
+    usage: /<command> <open|close> <end|nether>
   titles:
-    description: Manage player titles
-    usage: /titles [list|set|remove]
+    description: Управление титулами
+    usage: /<command> [list|set|remove] [название]
   tradetitles:
-    description: "Отправить запрос на обмен титулами или принять/отклонить запрос."
-    usage: |
-      /tradetitles <ник игрока> - отправить запрос на обмен.
-      /tradetitles accept - принять запрос.
-      /tradetitles decline - отклонить запрос.
+    description: Обмен титулами с игроком
+    usage: /<command> [игрок|accept|decline]
+  report:
+    description: Отправить репорт на игрока
+    usage: /<command> <ник> <причина>
+
+permissions:
+  waiservercore.alts:
+    description: Доступ к команде /alts
+    default: op
+  link.admin:
+    description: Доступ к команде /linkadmin
+    default: op
+  wai.worldcontrol:
+    description: Доступ к команде /worldcontrol
+    default: op
+  titles.title.*:
+    description: Доступ ко всем титулам
+    default: op
+  permissions:
+    waiservercore.reports.view:
+      description: Доступ к просмотру репортов
+      default: op

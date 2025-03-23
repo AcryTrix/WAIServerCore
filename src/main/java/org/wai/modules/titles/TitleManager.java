@@ -5,10 +5,11 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.scheduler.BukkitRunnable;
+
 import java.io.File;
 import java.util.*;
 
@@ -16,10 +17,63 @@ public class TitleManager {
     private final JavaPlugin plugin;
     private final YamlConfiguration titlesConfig;
     private final Map<Player, TradeRequest> tradeRequests = new HashMap<>();
+    private final YamlConfiguration settingsConfig;
+    private final File settingsFile;
 
     public TitleManager(JavaPlugin plugin) {
         this.plugin = plugin;
         this.titlesConfig = loadTitlesConfig();
+        this.settingsFile = new File(plugin.getDataFolder(), "settings.yml");
+        this.settingsConfig = YamlConfiguration.loadConfiguration(settingsFile);
+        if (!settingsFile.exists()) {
+            saveSettings();
+        }
+        startRequestCleanupTask();
+    }
+
+    public boolean canTrade(Player player) {
+        return settingsConfig.getBoolean("players." + player.getUniqueId() + ".allow-trade", true);
+    }
+
+    public boolean canSendTradeRequest(Player player) {
+        return canTrade(player);
+    }
+
+    public void toggleTradeSetting(Player player) {
+        boolean newState = !canTrade(player);
+        settingsConfig.set("players." + player.getUniqueId() + ".allow-trade", newState);
+        saveSettings();
+        cleanupRequestsForPlayer(player);
+    }
+
+    private void cleanupRequestsForPlayer(Player player) {
+        tradeRequests.entrySet().removeIf(entry -> {
+            TradeRequest request = entry.getValue();
+            if (request.getSender().equals(player) || request.getTarget().equals(player)) {
+                if (request.getSender().isOnline()) {
+                    request.getSender().sendMessage("§cОбмен отменен из-за изменения настроек!");
+                }
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void saveSettings() {
+        try {
+            settingsConfig.save(settingsFile);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Ошибка сохранения настроек: " + e.getMessage());
+        }
+    }
+
+    private void startRequestCleanupTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                cleanupExpiredRequests();
+            }
+        }.runTaskTimer(plugin, 1200L, 1200L);
     }
 
     private YamlConfiguration loadTitlesConfig() {
@@ -37,8 +91,9 @@ public class TitleManager {
     }
 
     public boolean setPlayerTitle(Player player, String titleId) {
-        if (!titlesConfig.contains("titles." + titleId)) return false;
-        if (!player.hasPermission("titles.title." + titleId)) return false;
+        if (!titlesConfig.contains("titles." + titleId) || !player.hasPermission("titles.title." + titleId)) {
+            return false;
+        }
         plugin.getConfig().set("players." + player.getUniqueId(), titleId);
         plugin.saveConfig();
         applyTitle(player);
@@ -46,7 +101,7 @@ public class TitleManager {
     }
 
     public void applyTitle(Player player) {
-        String titleId = plugin.getConfig().getString("players." + player.getUniqueId());
+        String titleId = getPlayerTitle(player);
         if (titleId == null) {
             removeTitle(player);
             return;
@@ -58,64 +113,84 @@ public class TitleManager {
     }
 
     public void removeTitle(Player player) {
-        Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " meta removesuffix"));
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " meta removesuffix");
         plugin.getConfig().set("players." + player.getUniqueId(), null);
         plugin.saveConfig();
     }
 
     public void sendTradeRequest(Player sender, Player target) {
+        if (!canTrade(sender)) {
+            sender.sendMessage("§cВы отключили обмен титулами!");
+            return;
+        }
+        if (!canTrade(target)) {
+            sender.sendMessage("§c" + target.getName() + " отключил обмен титулами!");
+            return;
+        }
+
         tradeRequests.put(target, new TradeRequest(sender, target));
-        TextComponent message = new TextComponent(ChatColor.GOLD + "➜ " + ChatColor.YELLOW + sender.getName() + ChatColor.GOLD + " предлагает обмен титулами ");
-        TextComponent acceptButton = new TextComponent(ChatColor.GREEN + "[✅ Принять]");
-        acceptButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tradetitles accept"));
-        acceptButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§aПринять обмен")));
-        TextComponent declineButton = new TextComponent(ChatColor.RED + "[❌ Отклонить]");
-        declineButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tradetitles decline"));
-        declineButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§cОтклонить запрос")));
-        message.addExtra(acceptButton);
-        message.addExtra(declineButton);
+        sendRequestMessage(sender, target);
+    }
+
+    private void sendRequestMessage(Player sender, Player target) {
+        TextComponent message = new TextComponent("§e" + sender.getName() + " предлагает обмен титулами!\n");
+        TextComponent accept = new TextComponent("§a[Принять]");
+        accept.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tradetitles accept"));
+        accept.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Принять обмен")));
+        TextComponent decline = new TextComponent(" §c[Отклонить]");
+        decline.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tradetitles decline"));
+        decline.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Отклонить запрос")));
+        message.addExtra(accept);
+        message.addExtra(decline);
         target.spigot().sendMessage(message);
-        sender.sendMessage(ChatColor.GREEN + "Запрос на обмен отправлен " + target.getName() + "!");
+        sender.sendMessage("§aЗапрос на обмен отправлен " + target.getName() + "!");
     }
 
     public boolean acceptTradeRequest(Player target) {
         TradeRequest request = tradeRequests.remove(target);
-        if (request == null) {
-            target.sendMessage(ChatColor.RED + "Нет активных запросов на обмен!");
+        if (request == null || !request.getSender().isOnline() || !target.isOnline()) {
+            target.sendMessage("§cЗапрос на обмен отсутствует или недействителен!");
             return false;
         }
+
         Player sender = request.getSender();
-        if (!sender.isOnline()) {
-            target.sendMessage(ChatColor.RED + "Игрок " + sender.getName() + " вышел из сети!");
+        String senderTitleId = getPlayerTitle(sender);
+        String targetTitleId = getPlayerTitle(target);
+
+        if (senderTitleId == null || targetTitleId == null) {
+            target.sendMessage("§cУ одного из игроков нет титула!");
             return false;
         }
-        if (tradeTitles(sender, target)) {
-            sender.sendMessage(ChatColor.GREEN + "✔ " + target.getName() + " принял ваш запрос на обмен!");
-            target.sendMessage(ChatColor.GREEN + "✔ Вы успешно обменялись титулами с " + sender.getName() + "!");
+
+        if (!sender.hasPermission("titles.title." + targetTitleId) || !target.hasPermission("titles.title." + senderTitleId)) {
+            target.sendMessage("§cНет прав на обмен этими титулами!");
+            return false;
+        }
+
+        if (setPlayerTitle(sender, targetTitleId) && setPlayerTitle(target, senderTitleId)) {
+            sender.sendMessage("§aВы получили титул: " + titlesConfig.getString("titles." + targetTitleId + ".suffix"));
+            target.sendMessage("§aВы получили титул: " + titlesConfig.getString("titles." + senderTitleId + ".suffix"));
             return true;
         }
+        target.sendMessage("§cОшибка при обмене титулами!");
         return false;
     }
 
     public void declineTradeRequest(Player target) {
         TradeRequest request = tradeRequests.remove(target);
-        if (request != null) {
-            request.getSender().sendMessage(ChatColor.GOLD + "✖ " + target.getName() + " отклонил ваш запрос на обмен");
-            target.sendMessage(ChatColor.YELLOW + "Вы отклонили запрос на обмен от " + request.getSender().getName());
+        if (request != null && request.getSender().isOnline()) {
+            request.getSender().sendMessage("§c" + target.getName() + " отклонил ваш запрос на обмен!");
+            target.sendMessage("§aЗапрос отклонен!");
         }
     }
 
-    private void setLuckPermsSuffix(Player player, String suffix, int priority) {
-        Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("lp user %s meta setsuffix %d \"%s\"", player.getName(), priority, suffix.replace("\"", "\\\""))));
+    private void cleanupExpiredRequests() {
+        tradeRequests.entrySet().removeIf(entry -> !entry.getKey().isOnline() || !entry.getValue().getSender().isOnline());
     }
 
-    public boolean tradeTitles(Player player1, Player player2) {
-        String player1Title = getPlayerTitle(player1);
-        String player2Title = getPlayerTitle(player2);
-        if (player1Title == null || player2Title == null) return false;
-        setPlayerTitle(player1, player2Title);
-        setPlayerTitle(player2, player1Title);
-        return true;
+    private void setLuckPermsSuffix(Player player, String suffix, int priority) {
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                String.format("lp user %s meta setsuffix %d \"%s\"", player.getName(), priority, suffix.replace("\"", "\\\"")));
     }
 
     public void savePlayerData(Player player) {

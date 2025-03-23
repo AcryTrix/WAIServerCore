@@ -1,0 +1,27 @@
+[discord]
+webhook_url = "https://discord.com/api/webhooks/1352737957068537978/8SRfxyPhIBXkquVMPHlM0gaPc77_I0mtCT4ZZqNVGB4TXiq4jt_nNgULX9at0a4o5Eim"
+moder_webhook_url = "https://discord.com/api/webhooks/1353128558792540282/R3XGNC9N-a99M9wiV8gbP0qFqxJ1KseVOJYhpZLbE8ICjD8Z6TIDO4yLb-jJLRjBEI7f"
+report_webhook_url = "https://discord.com/api/webhooks/1353170061275299964/KnvBBpm5SdJr087B_O2cxvY40bqqlZqYs2epllH1_9HPsf34GL28bgOZ8nMmaIGL07Ea"
+discord_link = "https://discord.gg/CRgfn8e7KF"
+
+[database]
+path = "plugins/WAIServerCore/database"
+
+[autorestart]
+times = ["03:00", "12:00"]
+timezone = "Europe/Moscow"
+
+[motd]
+enabled = true
+
+[worldcontrol]
+end_closed = true
+nether_closed = true
+
+[moderation]
+allowed_players = ["AcryTrix"]
+code_update_interval = 3600
+
+[entity_tracker]
+enabled = true
+log_interval = 300

@@ -2,6 +2,7 @@ package org.wai.modules;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -25,11 +26,17 @@ public class WebhookManager {
 
     public void sendRestartNotification() {
         if (webhookUrl == null || webhookUrl.isEmpty()) return;
-        String jsonPayload = "{\"embeds\":[{\"title\":\"Перезапуск сервера\",\"description\":\"⚠️ Запланированный перезапуск сервера начат!\",\"color\":16753920}]}";
+        String jsonPayload = "{\"embeds\":[{\"title\":\"Перезапуск сервера\",\"description\":\"⚠️ Запланирован перезапуск сервера!\",\"color\":16753920}]}";
         sendAsyncWebhook(jsonPayload);
     }
 
-    private void sendAsyncWebhook(String jsonPayload) {
+    public void sendCodeToDiscord(String code) {
+        if (webhookUrl == null || webhookUrl.isEmpty()) return;
+        String jsonPayload = "{\"embeds\":[{\"title\":\"Новый код для модераторов\",\"description\":\"🔑 Новый код: **" + code + "**\",\"color\":3447003}]}";
+        sendAsyncWebhook(jsonPayload);
+    }
+
+    public void sendAsyncWebhook(String jsonPayload) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 URL url = new URL(webhookUrl);
@@ -43,11 +50,11 @@ public class WebhookManager {
                 }
                 int responseCode = connection.getResponseCode();
                 if (responseCode != 204) {
-                    plugin.getLogger().warning("Не удалось отправить вебхук: код " + responseCode);
+                    plugin.getLogger().warning("Ошибка отправки вебхука: код " + responseCode);
                 }
                 connection.disconnect();
             } catch (IOException e) {
-                plugin.getLogger().warning("Ошибка отправки вебхука: " + e.getMessage());
+                plugin.getLogger().warning("Не удалось отправить вебхук: " + e.getMessage());
             }
         });
     }

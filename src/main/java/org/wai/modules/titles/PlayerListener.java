@@ -1,6 +1,5 @@
 package org.wai.modules.titles;
 
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -15,11 +14,7 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        String playerTitle = titleManager.getPlayerTitle(player);
-        if (playerTitle != null) {
-            player.sendMessage("§eВаш текущий титул: §f" + playerTitle);
-        }
+        titleManager.applyTitle(event.getPlayer());
     }
 
     @EventHandler
