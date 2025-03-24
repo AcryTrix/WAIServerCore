@@ -23,7 +23,6 @@ public class WAIServerCore extends JavaPlugin {
     private WorldControlModule worldControlModule;
     private ElytraEnchantControlModule elytraControlModule;
     private ModerActivationModule moderActivationModule;
-    private FishingModule fishingModule;
 
     @Override
     public void onEnable() {
@@ -38,7 +37,6 @@ public class WAIServerCore extends JavaPlugin {
         profileModule = new ProfileModule(this);
         worldControlModule = new WorldControlModule(this);
         elytraControlModule = new ElytraEnchantControlModule(this);
-        fishingModule = new FishingModule(this);
 
         saveDefaultConfig();
         String webhookUrl = getConfig().getString("discord-webhook-url", "");
@@ -53,6 +51,8 @@ public class WAIServerCore extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(motdModule, this);
         getServer().getPluginManager().registerEvents(sleepSkipModule, this);
+        this.getCommand("friend").setExecutor(new ProfileModule.FriendCommand(this));
+
 
         altsModule.registerCommandsAndEvents();
         autoRestartModule.start();

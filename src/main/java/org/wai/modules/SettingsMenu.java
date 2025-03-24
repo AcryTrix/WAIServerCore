@@ -12,6 +12,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.wai.modules.titles.TitleManager;
+import java.util.UUID;
+import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.OfflinePlayer;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -90,6 +93,9 @@ public class SettingsMenu implements Listener {
             lore3.add("§b➜ §fНикнейм: §b" + player.getName());
             lore3.add("§b➜ §fВремя в игре: §b" + getPlayTime(player));
             lore3.add("§b➜ §fДата присоединения: §b" + getJoinDate(player));
+            int rep = plugin.getConfig().getInt("reputation." + player.getUniqueId(), 0);
+            String repStr = (rep >= 0 ? "+" : "") + rep;
+            lore3.add("§b➜ §fРепутация: §b" + repStr);
 
             infoMeta.setLore(lore3);
             infoItem.setItemMeta(infoMeta);
@@ -108,7 +114,18 @@ public class SettingsMenu implements Listener {
             ));
             titleManagerButton.setItemMeta(titleMeta);
         }
-        menu.setItem(16, titleManagerButton);
+        menu.setItem(15, titleManagerButton);
+
+        // Кнопка "Друзья"
+        ItemStack friendsItem = new ItemStack(Material.PAPER);
+        ItemMeta friendsMeta = friendsItem.getItemMeta();
+        friendsMeta.setDisplayName(ChatColor.BLUE + "Друзья");
+        friendsMeta.setLore(Arrays.asList(
+                ChatColor.GRAY + "Нажмите, чтобы просмотреть список друзей",
+                ChatColor.GRAY + "Друзей: " + plugin.getConfig().getStringList("friends." + player.getUniqueId()).size()
+        ));
+        friendsItem.setItemMeta(friendsMeta);
+        menu.setItem(22, friendsItem); // Ставим кнопку на 14-й слот
 
         // Заполнение пустых слотов
         ItemStack filler = new ItemStack(Material.BLUE_STAINED_GLASS_PANE);
@@ -135,19 +152,99 @@ public class SettingsMenu implements Listener {
         if (clicked == null || clicked.getType() == Material.AIR) return;
 
         switch (event.getSlot()) {
-            case 11: // Кнопка "Обмен титулами"
+            case 11: // Обмен титулами
                 titleManager.toggleTradeSetting(player);
                 player.sendMessage("§bОбмен титулами: " + (titleManager.canTrade(player) ? "§aВКЛ" : "§cВЫКЛ"));
-                openSettingsMenu(player); // Обновление меню после изменения
+                openSettingsMenu(player);
                 break;
-            case 13: // Кнопка "Discord"
+            case 13: // Discord
                 player.sendMessage("§bDiscord: §9" + plugin.getConfig().getString("discord-link"));
                 break;
-            case 16: // Кнопка "Управление титулами"
+            case 22: // Друзья (исправленный case)
+                openFriendsMenu(player);
+                break;
+            case 15: // Управление титулами
                 player.closeInventory();
                 openTitleManagementMenu(player);
                 break;
         }
+    }
+
+    private void openFriendsMenu(Player player) {
+        Inventory menu = Bukkit.createInventory(null, 54, "Друзья");
+        List<String> friendUUIDs = plugin.getConfig().getStringList("friends." + player.getUniqueId());
+
+        for (String uuidStr : friendUUIDs) {
+            try {
+                UUID uuid = UUID.fromString(uuidStr);
+                OfflinePlayer friend = Bukkit.getOfflinePlayer(uuid);
+
+                ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+                SkullMeta meta = (SkullMeta) head.getItemMeta();
+
+                if (meta != null) {
+                    meta.setOwningPlayer(friend);
+                    meta.setDisplayName(ChatColor.GREEN + friend.getName());
+
+                    List<String> lore = new ArrayList<>();
+                    lore.add(ChatColor.GRAY + "Никнейм: " + friend.getName());
+
+                    if (friend.isOnline()) {
+                        Player onlineFriend = friend.getPlayer();
+                        if (onlineFriend != null) { // Проверка на null
+                            lore.add(ChatColor.GREEN + "В сети: Да");
+
+                            // Определяем название мира
+                            String worldName = onlineFriend.getWorld().getName();
+                            String translatedWorld;
+                            switch (worldName) {
+                                case "world":
+                                    translatedWorld = "Верхний мир";
+                                    break;
+                                case "world_nether":
+                                    translatedWorld = "Ад";
+                                    break;
+                                case "world_the_end":
+                                    translatedWorld = "Эндер мир";
+                                    break;
+                                default:
+                                    translatedWorld = "Неизвестный мир";
+                                    break;
+                            }
+
+                            lore.add(ChatColor.GRAY + "Мир: " + translatedWorld);
+                            lore.add(ChatColor.GRAY + "Координаты: " +
+                                    onlineFriend.getLocation().getBlockX() + ", " +
+                                    onlineFriend.getLocation().getBlockY() + ", " +
+                                    onlineFriend.getLocation().getBlockZ());
+                        }
+                    } else {
+                        lore.add(ChatColor.RED + "В сети: Нет");
+                    }
+
+                    meta.setLore(lore);
+                    head.setItemMeta(meta);
+                    menu.addItem(head);
+                }
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().warning("Неверный UUID друга: " + uuidStr);
+            }
+        }
+
+        player.openInventory(menu);
+
+        // Заполнение пустых слотов
+        ItemStack filler = new ItemStack(Material.BARRIER);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        if (fillerMeta != null) {
+            fillerMeta.setDisplayName(" ");
+            filler.setItemMeta(fillerMeta);
+        }
+        for (int i = 0; i < menu.getSize(); i++) {
+            if (menu.getItem(i) == null) menu.setItem(i, filler);
+        }
+
+        player.openInventory(menu);
     }
 
     // Открывает меню управления титулами
@@ -177,6 +274,40 @@ public class SettingsMenu implements Listener {
 
         player.openInventory(titlesMenu);
     }
+
+    @EventHandler
+    public void onFriendsMenuClick(InventoryClickEvent event) {
+        if (!event.getView().getTitle().equals("Друзья")) return;
+
+        event.setCancelled(true); // Отменяем любые действия в меню
+
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || clicked.getType() != Material.PLAYER_HEAD) return;
+
+        Player player = (Player) event.getWhoClicked();
+        if (event.getClick().isKeyboardClick() || event.getClick().isShiftClick()) {
+            return; // Игнорируем ненужные клики
+        }
+
+        // Проверяем, нажал ли игрок среднее колесико мыши
+        if (event.getClick().isCreativeAction() || event.getClick().name().equals("MIDDLE")) {
+            SkullMeta meta = (SkullMeta) clicked.getItemMeta();
+            if (meta == null || meta.getOwningPlayer() == null) return;
+
+            OfflinePlayer friend = meta.getOwningPlayer();
+            UUID friendUUID = friend.getUniqueId();
+
+            // Удаляем друга из конфига
+            List<String> friendList = plugin.getConfig().getStringList("friends." + player.getUniqueId());
+            friendList.remove(friendUUID.toString());
+            plugin.getConfig().set("friends." + player.getUniqueId(), friendList);
+            plugin.saveConfig();
+
+            player.sendMessage("§cВы удалили друга §e" + friend.getName() + "§c!");
+            openFriendsMenu(player); // Обновляем меню
+        }
+    }
+
 
     @EventHandler
     public void onTitleMenuClick(InventoryClickEvent event) {

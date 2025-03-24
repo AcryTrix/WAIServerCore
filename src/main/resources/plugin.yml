@@ -50,3 +50,7 @@ commands:
     description: Отключает режим модератора
     usage: /moff <code>
     permission: moff.admin
+  friend:
+    description: "Управление друзьями"
+    usage: /friend <accept|deny> [никнейм]
+    aliases: [friends, f]
