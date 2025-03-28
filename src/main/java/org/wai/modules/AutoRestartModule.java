@@ -2,6 +2,7 @@ package org.wai.modules;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
@@ -22,12 +23,9 @@ public class AutoRestartModule {
             ZonedDateTime now = ZonedDateTime.now(moscowZone);
             int hour = now.getHour();
             int minute = now.getMinute();
-
-            if ((hour == 3 || hour == 12) && minute == 0) {
-                if (lastRestartHour != hour) {
-                    lastRestartHour = hour;
-                    Bukkit.getScheduler().runTask(plugin, this::restartServer);
-                }
+            if ((hour == 3 || hour == 12) && minute == 0 && lastRestartHour != hour) {
+                lastRestartHour = hour;
+                Bukkit.getScheduler().runTask(plugin, this::restartServer);
             }
         }, 0L, 1200L).getTaskId();
     }
@@ -35,9 +33,7 @@ public class AutoRestartModule {
     private void restartServer() {
         webhookManager.sendRestartNotification();
         Bukkit.broadcastMessage("§cServer will restart in 5 seconds...");
-        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-            Bukkit.getServer().shutdown();
-        }, 100L);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, Bukkit.getServer()::shutdown, 100L);
     }
 
     public void instantRestart() {

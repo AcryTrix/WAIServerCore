@@ -31,7 +31,6 @@ public class AltsModule implements Listener {
                 sender.sendMessage("§cУ вас нет прав на использование этой команды!");
                 return true;
             }
-
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                 if (args.length == 0) {
                     handleOnlineAlts(sender);
@@ -63,11 +62,9 @@ public class AltsModule implements Listener {
     private void handleOnlineAlts(org.bukkit.command.CommandSender sender) {
         Set<String> processedIPs = new HashSet<>();
         boolean foundAlts = false;
-
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             String ip = onlinePlayer.getAddress().getAddress().getHostAddress();
             if (processedIPs.contains(ip)) continue;
-
             processedIPs.add(ip);
             try {
                 List<String> names = getNamesByIP(ip);
@@ -80,7 +77,6 @@ public class AltsModule implements Listener {
                 return;
             }
         }
-
         if (!foundAlts) {
             sender.sendMessage("§eНа сервере сейчас нет игроков с альтами.");
         }
@@ -93,13 +89,11 @@ public class AltsModule implements Listener {
                 sender.sendMessage("§cИгрок " + targetName + " не найден в базе данных!");
                 return;
             }
-
             List<String> names = getNamesByIP(targetIP);
             if (names.size() <= 1) {
                 sender.sendMessage("§eУ игрока " + targetName + " нет альтов.");
                 return;
             }
-
             sender.sendMessage(formatAltMessage(targetIP, names));
         } catch (SQLException e) {
             sender.sendMessage("§cОшибка базы данных при проверке альтов игрока!");

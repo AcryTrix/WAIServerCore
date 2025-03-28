@@ -60,7 +60,6 @@ public class ModerActivationModule implements Listener {
             activateModerator(player, args[0]);
             return true;
         });
-
         plugin.getCommand("moff").setExecutor((sender, command, label, args) -> {
             if (!(sender instanceof Player player)) {
                 sender.sendMessage("§cЭта команда доступна только игрокам!");
@@ -73,16 +72,23 @@ public class ModerActivationModule implements Listener {
             deactivateModerator(player);
             return true;
         });
-
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     private void startCodeUpdateTask() {
         long interval = configManager.getLong("moderation.code_update_interval") * 20L;
+        if (interval <= 0) {
+            plugin.getLogger().warning("Code update interval is <= 0, task not scheduled.");
+            return;
+        }
         taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
             String newCode = generateCode();
-            saveCodeToFile(newCode);
-            webhookManager.sendCodeToDiscord(newCode);
+            try {
+                saveCodeToFile(newCode);
+                webhookManager.sendCodeToDiscord(newCode);
+            } catch (Exception e) {
+                plugin.getLogger().severe("Failed to update code: " + e.getMessage());
+            }
         }, 0L, interval);
     }
 
@@ -102,12 +108,8 @@ public class ModerActivationModule implements Listener {
         return code.toString();
     }
 
-    private void saveCodeToFile(String code) {
-        try {
-            Files.writeString(Paths.get(codeFilePath), code);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Ошибка записи кода в файл: " + e.getMessage());
-        }
+    private void saveCodeToFile(String code) throws IOException {
+        Files.writeString(Paths.get(codeFilePath), code);
     }
 
     private void activateModerator(Player player, String providedCode) {

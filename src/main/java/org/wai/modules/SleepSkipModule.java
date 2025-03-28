@@ -27,7 +27,6 @@ public class SleepSkipModule implements Listener {
         if (event.getBedEnterResult() != PlayerBedEnterEvent.BedEnterResult.OK) return;
         World world = event.getPlayer().getWorld();
         if (world.getTime() < 12541) return;
-
         sleepingPlayers.put(world, sleepingPlayers.getOrDefault(world, 0) + 1);
         scheduleCheck(world);
     }
@@ -52,12 +51,10 @@ public class SleepSkipModule implements Listener {
         if (scheduledTasks.containsKey(world)) {
             plugin.getServer().getScheduler().cancelTask(scheduledTasks.get(world));
         }
-
         int taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
             checkSleepConditions(world);
             scheduledTasks.remove(world);
         }, 60L);
-
         scheduledTasks.put(world, taskId);
     }
 
@@ -66,16 +63,12 @@ public class SleepSkipModule implements Listener {
             sleepingPlayers.put(world, 0);
             return;
         }
-
         int onlinePlayers = world.getPlayers().size();
         if (onlinePlayers == 0) return;
-
         int required = (int) Math.ceil(onlinePlayers / 2.0);
         int sleeping = sleepingPlayers.getOrDefault(world, 0);
-
         String message = String.format("§e%d/%d игроков спят", sleeping, required);
         world.getPlayers().forEach(p -> p.sendActionBar(message));
-
         if (sleeping >= required) {
             world.setTime(0);
             world.setStorm(false);

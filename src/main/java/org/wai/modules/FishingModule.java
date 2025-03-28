@@ -28,17 +28,17 @@ public class FishingModule implements Listener {
     public FishingModule(WAIServerCore plugin) {
         this.plugin = plugin;
         this.fishingItems = loadFishingItems();
-        plugin.getLogger().info("FishingModule initialized with " + fishingItems.size() + " items.");
+        if (fishingItems.isEmpty()) {
+            plugin.getLogger().severe("No fishing items loaded!");
+        }
     }
 
     private List<FishingItem> loadFishingItems() {
         List<FishingItem> items = new ArrayList<>();
         if (plugin.getConfigManager().getTomlConfig() == null) {
-            plugin.getLogger().warning("Config is null, using default COD item.");
             items.add(new FishingItem(Material.COD, 1.0, "COD"));
             return items;
         }
-
         TomlArray configItems = plugin.getConfigManager().getTomlConfig().getArray("fishing.items");
         if (configItems != null) {
             for (int i = 0; i < configItems.size(); i++) {
@@ -50,16 +50,11 @@ public class FishingModule implements Listener {
                             Material.ENCHANTED_BOOK : Material.getMaterial(materialName);
                     if (material != null) {
                         items.add(new FishingItem(material, chance, materialName));
-                    } else {
-                        plugin.getLogger().warning("Invalid material: " + materialName);
                     }
-                } else {
-                    plugin.getLogger().warning("Missing material or chance at index " + i);
                 }
             }
         }
         if (items.isEmpty()) {
-            plugin.getLogger().warning("No valid fishing items found, using default COD.");
             items.add(new FishingItem(Material.COD, 1.0, "COD"));
         }
         return items;
@@ -68,19 +63,21 @@ public class FishingModule implements Listener {
     @EventHandler
     public void onPlayerFish(PlayerFishEvent event) {
         Player player = event.getPlayer();
-        plugin.getLogger().info("Fishing event triggered for " + player.getName() + ": " + event.getState().name());
         if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
             event.setCancelled(true);
             if (!activeGames.containsKey(player)) {
-                plugin.getLogger().info("Starting mini-game for " + player.getName());
                 startMiniGame(player);
             } else {
-                plugin.getLogger().info(player.getName() + " already has an active fishing game.");
+                player.sendMessage("§cУ вас уже активна рыбалка!");
             }
         }
     }
 
     private void startMiniGame(Player player) {
+        if (fishingItems.isEmpty()) {
+            player.sendMessage("§cОшибка: нет доступных предметов для рыбалки!");
+            return;
+        }
         Inventory inv = Bukkit.createInventory(null, 27, "Fishing Mini-Game");
         ItemStack background = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         for (int i = 0; i < 27; i++) {
@@ -92,8 +89,7 @@ public class FishingModule implements Listener {
         }
         FishingItem selectedItem = selectRandomItem();
         if (selectedItem == null) {
-            plugin.getLogger().severe("Selected item is null for " + player.getName());
-            player.sendMessage("§cError starting fishing game: No valid items available.");
+            player.sendMessage("§cОшибка: не удалось выбрать предмет для рыбалки!");
             return;
         }
         ItemStack fishItem = selectedItem.toItemStack(true);
@@ -104,26 +100,17 @@ public class FishingModule implements Listener {
         FishingGame game = new FishingGame(player, inv, 11, 12, 3, selectedItem);
         activeGames.put(player, game);
         game.start();
-        plugin.getLogger().info("Mini-game started for " + player.getName() + " with item " + selectedItem.originalName);
     }
 
     private FishingItem selectRandomItem() {
-        if (fishingItems.isEmpty()) {
-            plugin.getLogger().severe("Fishing items list is empty!");
-            return null;
-        }
+        if (fishingItems.isEmpty()) return null;
         double totalChance = fishingItems.stream().mapToDouble(item -> item.chance).sum();
-        if (totalChance <= 0) {
-            plugin.getLogger().warning("Total chance is 0, using first item.");
-            return fishingItems.get(0);
-        }
+        if (totalChance <= 0) return fishingItems.get(0);
         double random = Math.random() * totalChance;
         double current = 0;
         for (FishingItem item : fishingItems) {
             current += item.chance;
-            if (random <= current) {
-                return item;
-            }
+            if (random <= current) return item;
         }
         return fishingItems.get(0);
     }
@@ -136,19 +123,15 @@ public class FishingModule implements Listener {
         event.setCancelled(true);
         int slot = event.getSlot();
         FishingGame game = activeGames.get(player);
-        if (slot == 21) {
-            game.moveCatchZone(-1);
-        } else if (slot == 23) {
-            game.moveCatchZone(1);
-        }
+        if (slot == 21) game.moveCatchZone(-1);
+        else if (slot == 23) game.moveCatchZone(1);
     }
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player)) return;
         if (activeGames.containsKey(player)) {
-            FishingGame game = activeGames.get(player);
-            game.endGame(false);
+            activeGames.get(player).endGame(false);
         }
     }
 
@@ -180,9 +163,7 @@ public class FishingModule implements Listener {
         }
 
         public void start() {
-            if (updateTask != null && !updateTask.isCancelled()) {
-                updateTask.cancel();
-            }
+            if (updateTask != null && !updateTask.isCancelled()) updateTask.cancel();
             updateTask = new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -193,13 +174,9 @@ public class FishingModule implements Listener {
                     }
                     timeElapsed += 0.25;
                     updateInventory();
-                    if (catchProgress >= catchThreshold) {
-                        endGame(true);
-                    } else if (timeElapsed >= maxTime && timeElapsed < noRewardThreshold) {
-                        endGame(false);
-                    } else if (timeElapsed >= noRewardThreshold) {
-                        endGameWithNoReward();
-                    }
+                    if (catchProgress >= catchThreshold) endGame(true);
+                    else if (timeElapsed >= maxTime && timeElapsed < noRewardThreshold) endGame(false);
+                    else if (timeElapsed >= noRewardThreshold) endGameWithNoReward();
                 }
             }.runTaskTimer(plugin, 0, 5L);
         }
@@ -223,9 +200,7 @@ public class FishingModule implements Listener {
         }
 
         public void endGame(boolean success) {
-            if (updateTask != null) {
-                updateTask.cancel();
-            }
+            if (updateTask != null) updateTask.cancel();
             activeGames.remove(player);
             if (player.isOnline()) {
                 player.closeInventory();
@@ -233,10 +208,7 @@ public class FishingModule implements Listener {
                     player.sendMessage("You caught something!");
                     ItemStack reward = rewardItem.toItemStack(false);
                     HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(reward);
-                    if (!leftovers.isEmpty()) {
-                        player.getWorld().dropItem(player.getLocation(), reward);
-                    }
-                    plugin.getLogger().info(player.getName() + " caught a " + reward.getType().name());
+                    if (!leftovers.isEmpty()) player.getWorld().dropItem(player.getLocation(), reward);
                 } else {
                     player.sendMessage("The catch escaped.");
                 }
@@ -244,9 +216,7 @@ public class FishingModule implements Listener {
         }
 
         public void endGameWithNoReward() {
-            if (updateTask != null) {
-                updateTask.cancel();
-            }
+            if (updateTask != null) updateTask.cancel();
             activeGames.remove(player);
             if (player.isOnline()) {
                 player.closeInventory();
@@ -280,9 +250,7 @@ public class FishingModule implements Listener {
                     if (enchantment != null) {
                         try {
                             item.addEnchantment(enchantment, level);
-                        } catch (IllegalArgumentException e) {
-                            Bukkit.getLogger().warning("Failed to apply " + enchantment.getKey() + " to " + material.name());
-                        }
+                        } catch (IllegalArgumentException ignored) {}
                     }
                 }
                 if (material.isItem() && material.getMaxDurability() > 0) {
@@ -300,14 +268,9 @@ public class FishingModule implements Listener {
         private Enchantment getRandomApplicableEnchantment(ItemStack item) {
             List<Enchantment> applicable = new ArrayList<>();
             for (Enchantment ench : ENCHANTMENTS) {
-                if (ench.canEnchantItem(item)) {
-                    applicable.add(ench);
-                }
+                if (ench.canEnchantItem(item)) applicable.add(ench);
             }
-            if (applicable.isEmpty()) {
-                return null;
-            }
-            return applicable.get((int) (Math.random() * applicable.size()));
+            return applicable.isEmpty() ? null : applicable.get((int) (Math.random() * applicable.size()));
         }
     }
 }

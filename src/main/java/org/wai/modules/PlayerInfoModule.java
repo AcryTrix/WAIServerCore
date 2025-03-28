@@ -35,13 +35,11 @@ public class PlayerInfoModule implements Listener {
                 sender.sendMessage("§cИспользуйте: /lc <ник>");
                 return true;
             }
-
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                 try (PreparedStatement stmt = connection.prepareStatement(
                         "SELECT * FROM player_info WHERE username = ?")) {
                     stmt.setString(1, args[0]);
                     ResultSet rs = stmt.executeQuery();
-
                     if (rs.next()) {
                         sendPlayerInfo(sender, rs, args[0]);
                     } else {
@@ -61,7 +59,6 @@ public class PlayerInfoModule implements Listener {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
         long currentTime = System.currentTimeMillis();
-
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try (PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO player_info (uuid, username, first_join, last_join, total_playtime, last_ip) " +
@@ -81,7 +78,6 @@ public class PlayerInfoModule implements Listener {
                 plugin.getLogger().severe("Ошибка записи данных игрока: " + e.getMessage());
             }
         });
-
         sessionStarts.put(uuid, currentTime);
     }
 
@@ -90,7 +86,6 @@ public class PlayerInfoModule implements Listener {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
         Long sessionStart = sessionStarts.remove(uuid);
-
         if (sessionStart != null) {
             long sessionDuration = System.currentTimeMillis() - sessionStart;
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -112,18 +107,15 @@ public class PlayerInfoModule implements Listener {
         long lastJoin = rs.getLong("last_join");
         long totalPlaytime = rs.getLong("total_playtime");
         String lastIp = rs.getString("last_ip");
-
         Player onlinePlayer = Bukkit.getPlayer(uuid);
         if (onlinePlayer != null) {
             lastIp = onlinePlayer.getAddress().getAddress().getHostAddress();
         }
-
         String message = "§aИнформация об игроке §f" + username + "§a:\n" +
                 "§eПервый вход: §f" + dateFormat.format(firstJoin) + "\n" +
                 "§eПоследний вход: §f" + dateFormat.format(lastJoin) + "\n" +
                 "§eВремя в игре: §f" + (totalPlaytime / 3600000) + " ч.\n" +
                 "§eПоследний IP: §f" + lastIp;
-
         Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(message));
     }
 }

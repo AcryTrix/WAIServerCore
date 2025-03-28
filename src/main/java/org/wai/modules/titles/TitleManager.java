@@ -35,7 +35,7 @@ public class TitleManager {
     public boolean setPlayerTitle(Player player, String titleId) {
         if (!configManager.getTomlConfig().contains("titles_menu.permissions." + titleId)) return false;
         String permission = configManager.getString("titles_menu.permissions." + titleId);
-        if (!player.hasPermission(permission)) return false;
+        if (permission == null || !player.hasPermission(permission)) return false;
         plugin.getConfig().set("players." + player.getUniqueId(), titleId);
         plugin.saveConfig();
         applyTitle(player);
@@ -65,19 +65,16 @@ public class TitleManager {
         tradeRequests.put(target, new TradeRequest(sender, target));
         TextComponent message = new TextComponent(ChatColor.GOLD + "➜ " + ChatColor.YELLOW +
                 sender.getName() + ChatColor.GOLD + " предлагает обмен титулами ");
-
         TextComponent acceptButton = new TextComponent(ChatColor.GREEN + "[✅ Принять]");
         acceptButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tradetitles accept"));
         acceptButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                 new Text(new net.md_5.bungee.api.chat.ComponentBuilder("Принять обмен").color(
                         net.md_5.bungee.api.ChatColor.GREEN).create())));
-
         TextComponent declineButton = new TextComponent(ChatColor.RED + "[❌ Отклонить]");
         declineButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tradetitles decline"));
         declineButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                 new Text(new net.md_5.bungee.api.chat.ComponentBuilder("Отклонить запрос").color(
                         net.md_5.bungee.api.ChatColor.RED).create())));
-
         message.addExtra(acceptButton);
         message.addExtra(declineButton);
         target.spigot().sendMessage(message);
@@ -98,13 +95,15 @@ public class TitleManager {
         if (tradeTitles(sender, target)) {
             sender.sendMessage(ChatColor.GREEN + "✔ " + target.getName() + " принял ваш обмен");
             return true;
+        } else {
+            target.sendMessage(ChatColor.RED + "Обмен не удался: у одного из игроков нет титула");
+            return false;
         }
-        return false;
     }
 
     public void declineTradeRequest(Player target) {
         TradeRequest request = tradeRequests.remove(target);
-        if (request != null) {
+        if (request != null && request.getSender().isOnline()) {
             request.getSender().sendMessage(ChatColor.GOLD + "✖ " + target.getName() + " отклонил обмен");
         }
     }

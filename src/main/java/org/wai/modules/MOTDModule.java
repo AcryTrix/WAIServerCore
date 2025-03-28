@@ -26,7 +26,6 @@ public class MOTDModule implements Listener {
             messages = Collections.singletonList("§cMOTD отключен в конфигурации");
             return;
         }
-
         messages = configManager.getStringList("motd.messages");
         if (messages.isEmpty()) {
             messages = Collections.singletonList("§aДобро пожаловать на сервер!");

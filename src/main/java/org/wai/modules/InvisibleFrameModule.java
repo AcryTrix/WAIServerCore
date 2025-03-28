@@ -15,7 +15,7 @@ import java.util.Set;
 
 public class InvisibleFrameModule implements Listener {
     private final JavaPlugin plugin;
-    private Set<Player> cooldownPlayers = new HashSet<>();
+    private final Set<Player> cooldownPlayers = new HashSet<>();
 
     public InvisibleFrameModule(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -27,19 +27,11 @@ public class InvisibleFrameModule implements Listener {
         Player player = event.getPlayer();
         Entity clickedEntity = event.getRightClicked();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
-
-        if (itemInHand != null && itemInHand.getType() == Material.SHEARS) {
-            if (clickedEntity instanceof ItemFrame) {
-                ItemFrame frame = (ItemFrame) clickedEntity;
-
-                if (!cooldownPlayers.contains(player)) {
-                    frame.setVisible(!frame.isVisible());
-                    cooldownPlayers.add(player);
-
-                    plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                        cooldownPlayers.remove(player);
-                    }, 20L);
-                }
+        if (itemInHand != null && itemInHand.getType() == Material.SHEARS && clickedEntity instanceof ItemFrame frame) {
+            if (!cooldownPlayers.contains(player)) {
+                frame.setVisible(!frame.isVisible());
+                cooldownPlayers.add(player);
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> cooldownPlayers.remove(player), 20L);
             }
         }
     }

@@ -34,12 +34,10 @@ public class LinkingModule {
             sender.sendMessage("§cЭта команда доступна только игрокам!");
             return;
         }
-
         if (args.length != 1) {
             player.sendMessage("§cИспользуйте: /link <код>");
             return;
         }
-
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 connection.setAutoCommit(false);
@@ -49,13 +47,11 @@ public class LinkingModule {
                     connection.rollback();
                     return;
                 }
-
                 if (isAccountLinked(discordId)) {
                     player.sendMessage("§cЭтот Discord-аккаунт уже привязан!");
                     connection.rollback();
                     return;
                 }
-
                 linkAccount(discordId, player.getName());
                 connection.commit();
                 player.sendMessage("§aВаш аккаунт успешно привязан к Discord!");
@@ -81,12 +77,10 @@ public class LinkingModule {
             sender.sendMessage("§cУ вас нет прав на эту команду!");
             return;
         }
-
         if (args.length != 2) {
             sender.sendMessage("§cИспользуйте: /linkadmin <игрок> <discord_id>");
             return;
         }
-
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 linkAccount(args[1], args[0]);

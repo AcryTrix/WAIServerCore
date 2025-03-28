@@ -30,14 +30,12 @@ public class SettingsMenu implements Listener {
     public void openSettingsMenu(Player player) {
         String title = configManager.getString("settings_menu.title");
         Inventory menu = Bukkit.createInventory(null, 27, title != null ? title : "§6Настройки");
-
         ItemStack tradeToggle = new ItemStack(Material.CHEST);
         ItemMeta tradeMeta = tradeToggle.getItemMeta();
         tradeMeta.setDisplayName("§eНастройки торговли");
         tradeMeta.setLore(Arrays.asList("§7Нажмите для переключения"));
         tradeToggle.setItemMeta(tradeMeta);
         menu.setItem(11, tradeToggle);
-
         String discordLink = configManager.getString("settings_menu.discord_link");
         ItemStack discordInfo = new ItemStack(Material.PAPER);
         ItemMeta discordMeta = discordInfo.getItemMeta();
@@ -45,20 +43,15 @@ public class SettingsMenu implements Listener {
         discordMeta.setLore(Arrays.asList("§7Наш Discord: " + (discordLink != null ? discordLink : "не указан")));
         discordInfo.setItemMeta(discordMeta);
         menu.setItem(13, discordInfo);
-
-        boolean fillEmptySlots = configManager.getBoolean("settings_menu.fill_empty_slots");
-        if (fillEmptySlots) {
+        if (configManager.getBoolean("settings_menu.fill_empty_slots")) {
             ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
             ItemMeta fillerMeta = filler.getItemMeta();
             fillerMeta.setDisplayName(" ");
             filler.setItemMeta(fillerMeta);
             for (int i = 0; i < menu.getSize(); i++) {
-                if (menu.getItem(i) == null) {
-                    menu.setItem(i, filler);
-                }
+                if (menu.getItem(i) == null) menu.setItem(i, filler);
             }
         }
-
         player.openInventory(menu);
     }
 
@@ -67,13 +60,9 @@ public class SettingsMenu implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (!event.getView().getTitle().equals(configManager.getString("settings_menu.title"))) return;
         event.setCancelled(true);
-
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
-
-        if (clicked.getType() == Material.CHEST) {
-            player.closeInventory();
-        } else if (clicked.getType() == Material.PAPER) {
+        if (clicked.getType() == Material.CHEST || clicked.getType() == Material.PAPER) {
             player.closeInventory();
         }
     }

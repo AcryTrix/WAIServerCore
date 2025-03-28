@@ -19,11 +19,10 @@ public class EntityTrackerModule implements CommandExecutor {
     public EntityTrackerModule(JavaPlugin plugin, ConfigManager configManager) {
         this.plugin = plugin;
         this.configManager = configManager;
-        // Регистрируем команду с проверкой
         if (plugin.getCommand("entitytracker") != null) {
             plugin.getCommand("entitytracker").setExecutor(this);
         } else {
-            plugin.getLogger().severe("Не удалось зарегистрировать команду 'entitytracker': команда не найдена в plugin.yml!");
+            plugin.getLogger().severe("Не удалось зарегистрировать команду 'entitytracker'");
         }
     }
 
@@ -33,29 +32,24 @@ public class EntityTrackerModule implements CommandExecutor {
             sender.sendMessage("§cМодуль отслеживания сущностей отключен в конфиге.");
             return true;
         }
-
         if (!sender.hasPermission("entitytracker.use")) {
             sender.sendMessage("§cУ вас нет прав для использования этой команды!");
             return true;
         }
-
         trackEntities(sender);
         return true;
     }
 
     private void trackEntities(CommandSender sender) {
         Map<EntityType, Integer> entityCount = new EnumMap<>(EntityType.class);
-
         for (World world : plugin.getServer().getWorlds()) {
             for (Entity entity : world.getEntities()) {
                 entityCount.merge(entity.getType(), 1, Integer::sum);
             }
         }
-
         StringBuilder message = new StringBuilder("§aОтслеживание сущностей на сервере:\n");
         entityCount.forEach((type, count) ->
                 message.append("§7- ").append(type.name()).append(": §f").append(count).append("\n"));
-
         sender.sendMessage(message.toString());
     }
 

@@ -4,70 +4,57 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.tomlj.Toml;
 import org.tomlj.TomlParseResult;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ConfigManager {
     private final JavaPlugin plugin;
-    private TomlParseResult config;
-    private final Path configPath;
+    private TomlParseResult tomlConfig;
 
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
-        this.configPath = Paths.get(plugin.getDataFolder().getPath(), "config.toml");
-        if (!Files.exists(plugin.getDataFolder().toPath())) {
-            plugin.getDataFolder().mkdirs();
-        }
-        loadConfig();
+        loadTomlConfig();
     }
 
-    private void loadConfig() {
-        if (!Files.exists(configPath)) {
-            try {
-                plugin.saveResource("config.toml", false);
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().severe("Failed to save default config.toml: " + e.getMessage());
-            }
+    private void loadTomlConfig() {
+        File configFile = new File(plugin.getDataFolder(), "config.toml");
+        if (!configFile.exists()) {
+            plugin.saveResource("config.toml", false);
         }
         try {
-            config = Toml.parse(configPath);
-            if (config.hasErrors()) {
-                config.errors().forEach(error -> plugin.getLogger().severe("Ошибка в config.toml: " + error.toString()));
+            tomlConfig = Toml.parse(configFile.toPath());
+            if (tomlConfig.hasErrors()) {
+                tomlConfig.errors().forEach(error ->
+                        plugin.getLogger().warning("Config error: " + error.toString()));
             }
         } catch (IOException e) {
-            plugin.getLogger().severe("Не удалось загрузить config.toml: " + e.getMessage());
+            plugin.getLogger().severe("Failed to load config.toml: " + e.getMessage());
+            tomlConfig = null;
         }
-    }
-
-    public void reloadConfig() {
-        loadConfig();
     }
 
     public TomlParseResult getTomlConfig() {
-        return config;
+        return tomlConfig;
     }
 
-    public String getString(String key) {
-        return config != null ? config.getString(key) : null;
+    public String getString(String path) {
+        return tomlConfig != null && tomlConfig.contains(path) ? tomlConfig.getString(path) : null;
     }
 
-    public boolean getBoolean(String key) {
-        if (config == null) return false;
-        Boolean value = config.getBoolean(key);
-        return value != null && value;
+    public boolean getBoolean(String path) {
+        return tomlConfig != null && tomlConfig.contains(path) && tomlConfig.getBoolean(path);
     }
 
-    public long getLong(String key) {
-        if (config == null) return 0L;
-        Long value = config.getLong(key);
-        return value != null ? value : 0L;
+    public long getLong(String path) {
+        return tomlConfig != null && tomlConfig.contains(path) ? tomlConfig.getLong(path) : 0;
     }
 
-    public java.util.List<String> getStringList(String key) {
-        return config != null && config.getArray(key) != null ? config.getArray(key).toList().stream()
-                .map(Object::toString)
-                .toList() : java.util.Collections.emptyList();
+    public List<String> getStringList(String path) {
+        return tomlConfig != null && tomlConfig.contains(path) && tomlConfig.isArray(path) ?
+                tomlConfig.getArray(path).toList().stream().map(Object::toString).collect(Collectors.toList()) :
+                Collections.emptyList();
     }
 }
