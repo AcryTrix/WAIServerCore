@@ -17,17 +17,25 @@ public class ConfigManager {
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
         this.configPath = Paths.get(plugin.getDataFolder().getPath(), "config.toml");
+        // Ensure the data folder exists before loading
+        if (!Files.exists(plugin.getDataFolder().toPath())) {
+            plugin.getDataFolder().mkdirs();
+        }
         loadConfig();
     }
 
     private void loadConfig() {
         if (!Files.exists(configPath)) {
-            plugin.saveResource("config.toml", false);
+            try {
+                plugin.saveResource("config.toml", false);
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().severe("Failed to save default config.toml: " + e.getMessage());
+            }
         }
         try {
             config = Toml.parse(configPath);
             if (config.hasErrors()) {
-                config.errors().forEach(error -> plugin.getLogger().severe("Ошибка в config.toml: " + error));
+                config.errors().forEach(error -> plugin.getLogger().severe("Ошибка в config.toml: " + error.toString()));
             }
         } catch (IOException e) {
             plugin.getLogger().severe("Не удалось загрузить config.toml: " + e.getMessage());
@@ -38,22 +46,29 @@ public class ConfigManager {
         loadConfig();
     }
 
+    // Add null-safe getter
+    public TomlParseResult getTomlConfig() {
+        return config;
+    }
+
     public String getString(String key) {
-        return config.getString(key);
+        return config != null ? config.getString(key) : null;
     }
 
     public boolean getBoolean(String key) {
+        if (config == null) return false;
         Boolean value = config.getBoolean(key);
         return value != null && value;
     }
 
     public long getLong(String key) {
+        if (config == null) return 0L;
         Long value = config.getLong(key);
         return value != null ? value : 0L;
     }
 
     public java.util.List<String> getStringList(String key) {
-        return config.getArray(key) != null ? config.getArray(key).toList().stream()
+        return config != null && config.getArray(key) != null ? config.getArray(key).toList().stream()
                 .map(Object::toString)
                 .toList() : java.util.Collections.emptyList();
     }

@@ -25,3 +25,30 @@ code_update_interval = 3600
 [entity_tracker]
 enabled = true
 log_interval = 300
+
+[fishing]
+items = [
+    { material = "COD", chance = 0.30 },
+    { material = "SALMON", chance = 0.20 },
+    { material = "PUFFERFISH", chance = 0.08 },
+    { material = "TROPICAL_FISH", chance = 0.02 },
+    { material = "BOWL", chance = 0.05 },
+    { material = "LEATHER", chance = 0.05 },
+    { material = "ROTTEN_FLESH", chance = 0.05 },
+    { material = "STICK", chance = 0.05 },
+    { material = "STRING", chance = 0.05 },
+    { material = "BONE", chance = 0.03 },
+    { material = "INK_SAC", chance = 0.01 },
+    { material = "LILY_PAD", chance = 0.01 },
+    { material = "TRIPWIRE_HOOK", chance = 0.005 },
+    { material = "LEATHER_BOOTS", chance = 0.005 },
+    { material = "BOOK", chance = 0.02 },
+    { material = "FISHING_ROD", chance = 0.02 },
+    { material = "ENCHANTED_BOOK", chance = 0.015 },
+    { material = "BOW", chance = 0.01 },
+    { material = "NAME_TAG", chance = 0.01 },
+    { material = "SADDLE", chance = 0.01 },
+    { material = "NAUTILUS_SHELL", chance = 0.005 },
+    { material = "IRON_SWORD", chance = 0.005 },
+    { material = "MENDING_BOOK", chance = 0.03 }
+]

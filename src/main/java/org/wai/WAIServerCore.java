@@ -26,13 +26,22 @@ public class WAIServerCore extends JavaPlugin {
     private ModerActivationModule moderActivationModule;
     private EntityTrackerModule entityTrackerModule;
     private ReportModule reportModule;
+    private FishingModule fishingModule;
+    private InvisibleFrameModule invisibleFrameModule;
 
     @Override
     public void onEnable() {
+        // Initialize ConfigManager first since other modules depend on it
         configManager = new ConfigManager(this);
+
+        // Initialize DatabaseManager
         dbManager = new DatabaseManager(this, configManager.getString("database.path"));
+
+        // Initialize WebhookManagers
         webhookManager = new WebhookManager(this, configManager.getString("discord.webhook_url"));
         moderWebhookManager = new WebhookManager(this, configManager.getString("discord.moder_webhook_url"));
+
+        // Initialize all modules
         linkingModule = new LinkingModule(this, dbManager.getLinksConnection());
         altsModule = new AltsModule(this, dbManager.getAltsConnection());
         autoRestartModule = new AutoRestartModule(this, webhookManager, configManager);
@@ -47,10 +56,17 @@ public class WAIServerCore extends JavaPlugin {
         moderActivationModule = new ModerActivationModule(this, moderWebhookManager, configManager);
         entityTrackerModule = new EntityTrackerModule(this, configManager);
         reportModule = new ReportModule(this, new WebhookManager(this, configManager.getString("discord.report_webhook_url")));
+        fishingModule = new FishingModule(this);  // Initialize FishingModule
+        invisibleFrameModule = new InvisibleFrameModule(this);  // Assuming this exists
+
+        // Register events and commands
         registerEventsAndCommands();
+
+        // Start modules that need to run periodically
         webhookManager.sendServerStartMessage();
         autoRestartModule.start();
         entityTrackerModule.start();
+
         getLogger().info("§aWAIServerCore успешно запущен!");
     }
 
@@ -63,15 +79,22 @@ public class WAIServerCore extends JavaPlugin {
     }
 
     private void registerEventsAndCommands() {
+        // Register event listeners
         getServer().getPluginManager().registerEvents(motdModule, this);
         getServer().getPluginManager().registerEvents(sleepSkipModule, this);
         getServer().getPluginManager().registerEvents(elytraControlModule, this);
+        getServer().getPluginManager().registerEvents(fishingModule, this);  // Register FishingModule events
+        getServer().getPluginManager().registerEvents(invisibleFrameModule, this);  // Register InvisibleFrameModule events
+
+        // Register commands and events for modules that have their own methods
         altsModule.registerCommandsAndEvents();
         playerInfoModule.registerCommandsAndEvents();
         titlesModule.registerCommandsAndEvents();
         worldControlModule.registerCommandsAndEvents();
         moderActivationModule.registerCommandsAndEvents();
         linkingModule.registerCommands();
+
+        // Register the /settings command
         getCommand("settings").setExecutor((sender, command, label, args) -> {
             if (!(sender instanceof Player player)) {
                 sender.sendMessage("§cЭта команда только для игроков!");
@@ -80,13 +103,30 @@ public class WAIServerCore extends JavaPlugin {
             settingsMenu.openSettingsMenu(player);
             return true;
         });
+
+        // Optional: Add a command for fishing module if desired (example below)
+        /*
+        getCommand("fishinfo").setExecutor((sender, command, label, args) -> {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage("§cЭта команда только для игроков!");
+                return true;
+            }
+            player.sendMessage("§aFishing Mini-Game is active! Catch items by fishing.");
+            return true;
+        });
+        */
     }
 
+    // Getter methods for modules
     public TitlesModule getTitlesModule() {
         return titlesModule;
     }
 
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+
+    public FishingModule getFishingModule() {
+        return fishingModule;
     }
 }
