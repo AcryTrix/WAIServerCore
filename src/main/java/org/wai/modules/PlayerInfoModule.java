@@ -1,8 +1,6 @@
 package org.wai.modules;
 
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -10,7 +8,10 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,69 +26,34 @@ public class PlayerInfoModule implements Listener {
     public PlayerInfoModule(JavaPlugin plugin, Connection connection) {
         this.plugin = plugin;
         this.connection = connection;
-        initializeDatabase();
-    }
-
-    private void initializeDatabase() {
-        try (Statement stmt = connection.createStatement()) {
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS player_info (" +
-                    "uuid VARCHAR(36) PRIMARY KEY," +
-                    "username VARCHAR(16) NOT NULL," +
-                    "first_join BIGINT NOT NULL," +
-                    "last_join BIGINT NOT NULL," +
-                    "total_playtime BIGINT NOT NULL," +
-                    "last_ip VARCHAR(45))");
-        } catch (SQLException e) {
-            plugin.getLogger().severe("Ошибка создания таблицы player_info: " + e.getMessage());
-        }
     }
 
     public void registerCommandsAndEvents() {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        plugin.getCommand("lc").setExecutor(this::onLcCommand);
-    }
-
-    private boolean onLcCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (args.length != 1) {
-            sender.sendMessage("§cИспользуйте: /lc <ник>");
-            return true;
-        }
-
-        String username = args[0];
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            try (PreparedStatement stmt = connection.prepareStatement(
-                    "SELECT * FROM player_info WHERE username = ?")) {
-                stmt.setString(1, username);
-                ResultSet rs = stmt.executeQuery();
-
-                if (rs.next()) {
-                    UUID uuid = UUID.fromString(rs.getString("uuid"));
-                    long firstJoin = rs.getLong("first_join");
-                    long lastJoin = rs.getLong("last_join");
-                    long totalPlaytime = rs.getLong("total_playtime");
-                    String lastIp = rs.getString("last_ip");
-
-                    Player onlinePlayer = Bukkit.getPlayer(uuid);
-                    if (onlinePlayer != null) {
-                        lastIp = onlinePlayer.getAddress().getAddress().getHostAddress();
-                    }
-
-                    String message = "§aИнформация о игроке:\n" +
-                            "§eНик: §f" + username + "\n" +
-                            "§eПервый заход: §f" + dateFormat.format(firstJoin) + "\n" +
-                            "§eПоследний заход: §f" + dateFormat.format(lastJoin) + "\n" +
-                            "§eЧасов наиграно: §f" + (totalPlaytime / 3600000) + "\n" +
-                            "§eIP: §f" + lastIp;
-
-                    Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(message));
-                } else {
-                    Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage("§cИгрок не найден"));
-                }
-            } catch (SQLException e) {
-                handleDatabaseError(sender, e);
+        plugin.getCommand("lc").setExecutor((sender, command, label, args) -> {
+            if (args.length != 1) {
+                sender.sendMessage("§cИспользуйте: /lc <ник>");
+                return true;
             }
+
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                try (PreparedStatement stmt = connection.prepareStatement(
+                        "SELECT * FROM player_info WHERE username = ?")) {
+                    stmt.setString(1, args[0]);
+                    ResultSet rs = stmt.executeQuery();
+
+                    if (rs.next()) {
+                        sendPlayerInfo(sender, rs, args[0]);
+                    } else {
+                        sender.sendMessage("§cИгрок " + args[0] + " не найден!");
+                    }
+                } catch (SQLException e) {
+                    plugin.getLogger().severe("Ошибка БД: " + e.getMessage());
+                    sender.sendMessage("§cОшибка при запросе данных!");
+                }
+            });
+            return true;
         });
-        return true;
     }
 
     @EventHandler
@@ -100,19 +66,19 @@ public class PlayerInfoModule implements Listener {
             try (PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO player_info (uuid, username, first_join, last_join, total_playtime, last_ip) " +
                             "VALUES (?, ?, ?, ?, ?, ?) " +
-                            "ON CONFLICT(uuid) DO UPDATE SET " +
-                            "username = excluded.username, last_join = excluded.last_join, last_ip = excluded.last_ip")) {
-
+                            "ON CONFLICT(uuid) DO UPDATE SET username = ?, last_join = ?, last_ip = ?")) {
                 stmt.setString(1, uuid.toString());
                 stmt.setString(2, player.getName());
                 stmt.setLong(3, currentTime);
                 stmt.setLong(4, currentTime);
                 stmt.setLong(5, 0);
                 stmt.setString(6, player.getAddress().getAddress().getHostAddress());
+                stmt.setString(7, player.getName());
+                stmt.setLong(8, currentTime);
+                stmt.setString(9, player.getAddress().getAddress().getHostAddress());
                 stmt.executeUpdate();
-
             } catch (SQLException e) {
-                plugin.getLogger().severe("Ошибка обновления данных игрока: " + e.getMessage());
+                plugin.getLogger().severe("Ошибка записи данных игрока: " + e.getMessage());
             }
         });
 
@@ -130,11 +96,9 @@ public class PlayerInfoModule implements Listener {
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                 try (PreparedStatement stmt = connection.prepareStatement(
                         "UPDATE player_info SET total_playtime = total_playtime + ? WHERE uuid = ?")) {
-
                     stmt.setLong(1, sessionDuration);
                     stmt.setString(2, uuid.toString());
                     stmt.executeUpdate();
-
                 } catch (SQLException e) {
                     plugin.getLogger().severe("Ошибка обновления времени игры: " + e.getMessage());
                 }
@@ -142,8 +106,24 @@ public class PlayerInfoModule implements Listener {
         }
     }
 
-    private void handleDatabaseError(CommandSender sender, SQLException e) {
-        plugin.getLogger().severe("Ошибка БД: " + e.getMessage());
-        Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage("§cОшибка базы данных"));
+    private void sendPlayerInfo(org.bukkit.command.CommandSender sender, ResultSet rs, String username) throws SQLException {
+        UUID uuid = UUID.fromString(rs.getString("uuid"));
+        long firstJoin = rs.getLong("first_join");
+        long lastJoin = rs.getLong("last_join");
+        long totalPlaytime = rs.getLong("total_playtime");
+        String lastIp = rs.getString("last_ip");
+
+        Player onlinePlayer = Bukkit.getPlayer(uuid);
+        if (onlinePlayer != null) {
+            lastIp = onlinePlayer.getAddress().getAddress().getHostAddress();
+        }
+
+        String message = "§aИнформация об игроке §f" + username + "§a:\n" +
+                "§eПервый вход: §f" + dateFormat.format(firstJoin) + "\n" +
+                "§eПоследний вход: §f" + dateFormat.format(lastJoin) + "\n" +
+                "§eВремя в игре: §f" + (totalPlaytime / 3600000) + " ч.\n" +
+                "§eПоследний IP: §f" + lastIp;
+
+        Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(message));
     }
 }

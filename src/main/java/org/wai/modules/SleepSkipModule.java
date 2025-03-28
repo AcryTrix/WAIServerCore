@@ -8,6 +8,7 @@ import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,17 +19,16 @@ public class SleepSkipModule implements Listener {
 
     public SleepSkipModule(JavaPlugin plugin) {
         this.plugin = plugin;
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @EventHandler
     public void onBedEnter(PlayerBedEnterEvent event) {
+        if (event.getBedEnterResult() != PlayerBedEnterEvent.BedEnterResult.OK) return;
         World world = event.getPlayer().getWorld();
         if (world.getTime() < 12541) return;
 
-        int sleepers = sleepingPlayers.getOrDefault(world, 0) + 1;
-        sleepingPlayers.put(world, sleepers);
-        scheduleDelayedCheck(world);
+        sleepingPlayers.put(world, sleepingPlayers.getOrDefault(world, 0) + 1);
+        scheduleCheck(world);
     }
 
     @EventHandler
@@ -42,22 +42,16 @@ public class SleepSkipModule implements Listener {
     }
 
     private void updateSleepCounter(World world) {
-        int current = (int) world.getPlayers().stream()
-                .filter(Player::isSleeping)
-                .count();
-
+        int current = (int) world.getPlayers().stream().filter(Player::isSleeping).count();
         sleepingPlayers.put(world, current);
-        scheduleDelayedCheck(world);
+        scheduleCheck(world);
     }
 
-    private void scheduleDelayedCheck(World world) {
-        // Отменяем предыдущую запланированную задачу для этого мира
+    private void scheduleCheck(World world) {
         if (scheduledTasks.containsKey(world)) {
             plugin.getServer().getScheduler().cancelTask(scheduledTasks.get(world));
-            scheduledTasks.remove(world);
         }
 
-        // Планируем новую проверку через 3 секунды (60 тиков)
         int taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
             checkSleepConditions(world);
             scheduledTasks.remove(world);
@@ -78,8 +72,7 @@ public class SleepSkipModule implements Listener {
         int required = (int) Math.ceil(onlinePlayers / 2.0);
         int sleeping = sleepingPlayers.getOrDefault(world, 0);
 
-        // Отправляем сообщение в action bar
-        String message = String.format("§e%d/%d players sleeping", sleeping, required);
+        String message = String.format("§e%d/%d игроков спят", sleeping, required);
         world.getPlayers().forEach(p -> p.sendActionBar(message));
 
         if (sleeping >= required) {
@@ -87,7 +80,7 @@ public class SleepSkipModule implements Listener {
             world.setStorm(false);
             world.setThundering(false);
             sleepingPlayers.put(world, 0);
-            world.getPlayers().forEach(p -> p.sendActionBar("§aSkipping night!"));
+            world.getPlayers().forEach(p -> p.sendActionBar("§aНочь пропущена!"));
         }
     }
 }

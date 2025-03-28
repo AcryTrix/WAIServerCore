@@ -3,8 +3,8 @@ package org.wai.modules.titles;
 import org.bukkit.entity.Player;
 
 public class TradeRequest {
-    private final Player sender; // Игрок, который отправил запрос
-    private final Player target; // Игрок, которому отправлен запрос
+    private final Player sender;
+    private final Player target;
 
     public TradeRequest(Player sender, Player target) {
         this.sender = sender;

@@ -46,19 +46,6 @@ public class WebhookManager {
         sendAsyncWebhook(jsonPayload);
     }
 
-    public void sendCodeToDiscord(String code) {
-        if (webhookUrl == null || webhookUrl.isEmpty()) return;
-
-        String jsonPayload = "{"
-                + "\"embeds\":[{"
-                + "\"title\":\"Новый код для модераторов\","
-                + "\"description\":\"🔑 Новый код: **" + code + "**\","
-                + "\"color\":3447003"
-                + "}]}";
-
-        sendAsyncWebhook(jsonPayload);
-    }
-
     private void sendAsyncWebhook(String jsonPayload) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {

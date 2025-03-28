@@ -1,0 +1,54 @@
+[discord]
+webhook_url = "https://discord.com/api/webhooks/1352737957068537978/8SRfxyPhIBXkquVMPHlM0gaPc77_I0mtCT4ZZqNVGB4TXiq4jt_nNgULX9at0a4o5Eim"
+moder_webhook_url = "https://discord.com/api/webhooks/1353128558792540282/R3XGNC9N-a99M9wiV8gbP0qFqxJ1KseVOJYhpZLbE8ICjD8Z6TIDO4yLb-jJLRjBEI7f"
+report_webhook_url = "https://discord.com/api/webhooks/1353170061275299964/KnvBBpm5SdJr087B_O2cxvY40bqqlZqYs2epllH1_9HPsf34GL28bgOZ8nMmaIGL07Ea"
+discord_link = "https://discord.gg/CRgfn8e7KF"
+
+[database]
+path = "plugins/WAIServerCore/database"
+
+[autorestart]
+times = ["03:00", "12:00"]
+timezone = "Europe/Moscow"
+
+[motd]
+enabled = true
+
+[worldcontrol]
+end_closed = true
+nether_closed = true
+
+[moderation]
+allowed_players = ["AcryTrix"]
+code_update_interval = 3600
+
+[entity_tracker]
+enabled = true
+log_interval = 300
+
+[fishing]
+items = [
+    { material = "COD", chance = 0.30 },
+    { material = "SALMON", chance = 0.20 },
+    { material = "PUFFERFISH", chance = 0.08 },
+    { material = "TROPICAL_FISH", chance = 0.02 },
+    { material = "BOWL", chance = 0.05 },
+    { material = "LEATHER", chance = 0.05 },
+    { material = "ROTTEN_FLESH", chance = 0.05 },
+    { material = "STICK", chance = 0.05 },
+    { material = "STRING", chance = 0.05 },
+    { material = "BONE", chance = 0.03 },
+    { material = "INK_SAC", chance = 0.01 },
+    { material = "LILY_PAD", chance = 0.01 },
+    { material = "TRIPWIRE_HOOK", chance = 0.005 },
+    { material = "LEATHER_BOOTS", chance = 0.005 },
+    { material = "BOOK", chance = 0.02 },
+    { material = "FISHING_ROD", chance = 0.02 },
+    { material = "ENCHANTED_BOOK", chance = 0.015 },
+    { material = "BOW", chance = 0.01 },
+    { material = "NAME_TAG", chance = 0.01 },
+    { material = "SADDLE", chance = 0.01 },
+    { material = "NAUTILUS_SHELL", chance = 0.005 },
+    { material = "IRON_SWORD", chance = 0.005 },
+    { material = "MENDING_BOOK", chance = 0.03 }
+]
