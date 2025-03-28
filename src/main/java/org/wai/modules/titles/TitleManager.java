@@ -8,28 +8,24 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.configuration.file.YamlConfiguration;
-import java.io.File;
-import java.util.*;
+import org.wai.config.ConfigManager;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class TitleManager {
     private final JavaPlugin plugin;
-    private final YamlConfiguration titlesConfig;
+    private final ConfigManager configManager;
     private final Map<Player, TradeRequest> tradeRequests = new HashMap<>();
 
     public TitleManager(JavaPlugin plugin) {
         this.plugin = plugin;
-        this.titlesConfig = loadTitlesConfig();
-    }
-
-    private YamlConfiguration loadTitlesConfig() {
-        File file = new File(plugin.getDataFolder(), "titles.yml");
-        if (!file.exists()) plugin.saveResource("titles.yml", false);
-        return YamlConfiguration.loadConfiguration(file);
+        this.configManager = ((org.wai.WAIServerCore) plugin).getConfigManager();
     }
 
     public Set<String> getAvailableTitles() {
-        return titlesConfig.getConfigurationSection("titles").getKeys(false);
+        return configManager.getTomlConfig().getTable("titles_menu.permissions").toMap().keySet();
     }
 
     public String getPlayerTitle(Player player) {
@@ -37,8 +33,9 @@ public class TitleManager {
     }
 
     public boolean setPlayerTitle(Player player, String titleId) {
-        if (!titlesConfig.contains("titles." + titleId)) return false;
-        if (!player.hasPermission("titles.title." + titleId)) return false;
+        if (!configManager.getTomlConfig().contains("titles_menu.permissions." + titleId)) return false;
+        String permission = configManager.getString("titles_menu.permissions." + titleId);
+        if (!player.hasPermission(permission)) return false;
         plugin.getConfig().set("players." + player.getUniqueId(), titleId);
         plugin.saveConfig();
         applyTitle(player);
@@ -51,10 +48,9 @@ public class TitleManager {
             removeTitle(player);
             return;
         }
-        String suffix = titlesConfig.getString("titles." + titleId + ".suffix");
-        String symbol = titlesConfig.getString("titles." + titleId + ".symbol", " ");
-        int priority = titlesConfig.getInt("titles." + titleId + ".priority", 100);
-        setLuckPermsSuffix(player, symbol + suffix, priority);
+        String suffix = configManager.getString("titles_menu.item_name").replace("{title}", titleId);
+        int priority = 100;
+        setLuckPermsSuffix(player, suffix, priority);
     }
 
     public void removeTitle(Player player) {
@@ -132,18 +128,5 @@ public class TitleManager {
     public void savePlayerData(Player player) {
         plugin.getConfig().set("players." + player.getUniqueId(), getPlayerTitle(player));
         plugin.saveConfig();
-    }
-
-    private static class TradeRequest {
-        private final Player sender;
-        private final Player target;
-
-        public TradeRequest(Player sender, Player target) {
-            this.sender = sender;
-            this.target = target;
-        }
-
-        public Player getSender() { return sender; }
-        public Player getTarget() { return target; }
     }
 }

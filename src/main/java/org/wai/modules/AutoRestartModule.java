@@ -36,14 +36,14 @@ public class AutoRestartModule {
         webhookManager.sendRestartNotification();
         Bukkit.broadcastMessage("§cServer will restart in 5 seconds...");
         Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
+            Bukkit.getServer().shutdown();
         }, 100L);
     }
 
     public void instantRestart() {
         Bukkit.getScheduler().runTask(plugin, () -> {
             Bukkit.broadcastMessage("§cСервер будет перезагружен немедленно по команде администратора.");
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
+            Bukkit.getServer().shutdown();
         });
     }
 

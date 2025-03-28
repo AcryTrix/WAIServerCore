@@ -13,6 +13,58 @@ timezone = "Europe/Moscow"
 
 [motd]
 enabled = true
+messages = [
+    "This feature is deprecated.",
+    "Files are corrupted.",
+    "Operation failed due to missing dependencies.",
+    "Unexpected error occurred.",
+    "Invalid input provided.",
+    "Resource not found.",
+    "Access denied.",
+    "Out of memory.",
+    "Null pointer exception.",
+    "Invalid configuration detected.",
+    "Connection timed out.",
+    "Server is not responding.",
+    "Insufficient permissions.",
+    "Database is unreachable.",
+    "Configuration file is missing.",
+    "Module is not initialized.",
+    "Invalid parameter value.",
+    "Index out of bounds.",
+    "File not found.",
+    "Service unavailable.",
+    "Operation aborted.",
+    "The system is in an unstable state.",
+    "Unexpected token encountered.",
+    "Memory leak detected.",
+    "Cache is full.",
+    "Operation is not supported.",
+    "Error while parsing data.",
+    "Failed to load resource.",
+    "Security breach detected.",
+    "Dependency conflict found.",
+    "Deprecated API used.",
+    "Protocol mismatch error.",
+    "Invalid session token.",
+    "Unable to complete the request.",
+    "Malformed request syntax.",
+    "Disk quota exceeded.",
+    "Service temporarily disabled.",
+    "Operation canceled by user.",
+    "Data type mismatch.",
+    "Checksum validation failed.",
+    "Network error occurred.",
+    "Resource locked by another process.",
+    "File system is read-only.",
+    "Incompatible version detected.",
+    "Unexpected shutdown.",
+    "Failed to allocate resources.",
+    "Environment variable is not set.",
+    "Unsupported operation.",
+    "Operation completed with warnings.",
+    "System maintenance in progress."
+]
 
 [worldcontrol]
 end_closed = true
@@ -52,3 +104,19 @@ items = [
     { material = "IRON_SWORD", chance = 0.005 },
     { material = "MENDING_BOOK", chance = 0.03 }
 ]
+
+[settings_menu]
+title = "§6Настройки"
+discord_link = "https://discord.gg/example"
+fill_empty_slots = true
+
+[titles_menu]
+title = "§6Управление титулами"
+size = 36
+item_name = "§a{title}"
+available_title_item = "GREEN_TERRACOTTA"
+unavailable_title_item = "BARRIER"
+permissions = { warrior = "titles.title.warrior", mage = "titles.title.mage", brimstone = "titles.title.brimstone" }
+
+[profile]
+view_permission = "waiservercore.profile.view"

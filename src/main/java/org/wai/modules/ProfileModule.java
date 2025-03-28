@@ -8,15 +8,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.wai.WAIServerCore;
-import org.wai.modules.titles.TitleManager;
+import org.wai.config.ConfigManager;
 import org.wai.modules.titles.TitlesModule;
 
 import java.time.Instant;
@@ -25,16 +23,15 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 public class ProfileModule implements Listener {
-
     private final JavaPlugin plugin;
+    private final ConfigManager configManager;
     private final TitlesModule titlesModule;
 
     public ProfileModule(JavaPlugin plugin) {
         this.plugin = plugin;
+        this.configManager = ((WAIServerCore) plugin).getConfigManager();
         this.titlesModule = ((WAIServerCore) plugin).getTitlesModule();
         Bukkit.getPluginManager().registerEvents(this, plugin);
-        Bukkit.getPluginManager().registerEvents(new ProfileMenuListener(), plugin);
-        plugin.getLogger().info("ProfileModule успешно загружен!");
     }
 
     @EventHandler
@@ -44,6 +41,11 @@ public class ProfileModule implements Listener {
             Player player = event.getPlayer();
 
             if (player.isSneaking()) {
+                String viewPermission = configManager.getString("profile.view_permission");
+                if (viewPermission != null && !player.hasPermission(viewPermission)) {
+                    player.sendMessage(ChatColor.RED + "У вас нет прав на просмотр профиля!");
+                    return;
+                }
                 openProfileMenu(player, clickedPlayer);
             }
         }
@@ -113,50 +115,24 @@ public class ProfileModule implements Listener {
                 .format(Instant.ofEpochMilli(firstPlayed));
     }
 
-    private static class ProfileMenuListener implements Listener {
-        @EventHandler
-        public void onInventoryClick(InventoryClickEvent event) {
-            if (event.getClickedInventory() == null ||
-                    event.getClickedInventory().getType() != InventoryType.CHEST ||
-                    !event.getView().getTitle().startsWith("Профиль")) return;
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!event.getView().getTitle().startsWith("Профиль")) return;
+        event.setCancelled(true);
 
-            event.setCancelled(true);
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || clicked.getType() == Material.AIR) return;
 
-            ItemStack clickedItem = event.getCurrentItem();
-            if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
+        String targetName = event.getView().getTitle().replace("Профиль ", "");
+        Player target = Bukkit.getPlayer(targetName);
+        if (target == null) {
+            player.sendMessage(ChatColor.RED + "Игрок " + targetName + " не в сети!");
+            return;
+        }
 
-            Player player = (Player) event.getWhoClicked();
-            String targetName = event.getView().getTitle().replace("Профиль ", "");
-            Player target = Bukkit.getPlayer(targetName);
-
-            if (target == null) {
-                player.sendMessage(ChatColor.RED + "Игрок " + targetName + " не в сети!");
-                return;
-            }
-
-            if (clickedItem.getType() == Material.NAME_TAG) {
-                TitleManager titleManager = ((WAIServerCore) Bukkit.getPluginManager().getPlugin("WAIServerCore"))
-                        .getTitlesModule().getTitleManager();
-
-                if (titleManager != null) {
-                    titleManager.sendTradeRequest(player, target);
-                } else {
-                    player.sendMessage(ChatColor.RED + "Ошибка: модуль титулов не загружен!");
-                }
-            }
-
-            if (event.getAction() == InventoryAction.PICKUP_ALL ||
-                    event.getAction() == InventoryAction.PICKUP_HALF ||
-                    event.getAction() == InventoryAction.PICKUP_ONE ||
-                    event.getAction() == InventoryAction.PICKUP_SOME ||
-                    event.getAction() == InventoryAction.CLONE_STACK ||
-                    event.getAction() == InventoryAction.PLACE_ALL ||
-                    event.getAction() == InventoryAction.PLACE_ONE ||
-                    event.getAction() == InventoryAction.PLACE_SOME ||
-                    event.getAction() == InventoryAction.SWAP_WITH_CURSOR ||
-                    event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-                event.setCancelled(true);
-            }
+        if (clicked.getType() == Material.NAME_TAG) {
+            titlesModule.getTitleManager().sendTradeRequest(player, target);
         }
     }
 }

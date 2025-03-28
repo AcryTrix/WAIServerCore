@@ -8,17 +8,17 @@ commands:
   linkadmin:
     description: Admin account linking tool
     permission: waiservercore.admin
-    permission-message: "§cYou need permission 'unifiedplugin.admin'!"
+    permission-message: "§cYou need permission 'waiservercore.admin'!"
   alts:
     description: Check player's alternate accounts
     permission: waiservercore.alts
-    permission-message: "§cYou need permission 'unifiedplugin.alts'!"
+    permission-message: "§cYou need permission 'waiservercore.alts'!"
   restartnow:
     description: Instantly restart server
     usage: /restartnow
     permission: autorestart.admin
   setmotd:
-    description: Set the server's MOTD.
+    description: Set the server's MOTD
     usage: /setmotd <message>
     permission: setmotd.admin
   lc:
@@ -29,8 +29,29 @@ commands:
     description: Manage player titles
     usage: /titles [list|set|remove]
   tradetitles:
-    description: "Отправить запрос на обмен титулами или принять/отклонить запрос."
+    description: "Отправить запрос на обмен титулами или принять/отклонить запрос"
     usage: |
-      /tradetitles <ник игрока> - отправить запрос на обмен.
-      /tradetitles accept - принять запрос.
-      /tradetitles decline - отклонить запрос.
+      /tradetitles <ник игрока> - отправить запрос на обмен
+      /tradetitles accept - принять запрос
+      /tradetitles decline - отклонить запрос
+  worldcontrol:
+    description: Control world access
+    usage: /worldcontrol <open|close> <end|nether>
+    permission: wai.worldcontrol
+  report:
+    description: Report a player to moderators
+    usage: /report <player> <reason>
+  entitytracker:
+    description: Показывает статистику сущностей на сервере
+    usage: /entitytracker
+    permission: entitytracker.use
+  mon:
+    description: Activate moderator mode with a code
+    usage: /mon <code>
+  moff:
+    description: Deactivate moderator mode
+    usage: /moff
+permissions:
+  entitytracker.use:
+    description: Allows use of the entitytracker command
+    default: op

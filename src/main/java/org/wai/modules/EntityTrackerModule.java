@@ -1,7 +1,9 @@
 package org.wai.modules;
 
-import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -10,46 +12,56 @@ import org.wai.config.ConfigManager;
 import java.util.EnumMap;
 import java.util.Map;
 
-public class EntityTrackerModule {
+public class EntityTrackerModule implements CommandExecutor {
     private final JavaPlugin plugin;
     private final ConfigManager configManager;
-    private int taskId = -1;
 
     public EntityTrackerModule(JavaPlugin plugin, ConfigManager configManager) {
         this.plugin = plugin;
         this.configManager = configManager;
+        // Регистрируем команду с проверкой
+        if (plugin.getCommand("entitytracker") != null) {
+            plugin.getCommand("entitytracker").setExecutor(this);
+        } else {
+            plugin.getLogger().severe("Не удалось зарегистрировать команду 'entitytracker': команда не найдена в plugin.yml!");
+        }
     }
 
-    public void start() {
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!configManager.getBoolean("entity_tracker.enabled")) {
-            plugin.getLogger().info("Модуль отслеживания сущностей отключен в конфиге.");
-            return;
+            sender.sendMessage("§cМодуль отслеживания сущностей отключен в конфиге.");
+            return true;
         }
 
-        long interval = configManager.getLong("entity_tracker.log_interval") * 20L;
-        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, this::trackEntities, 20L, interval);
-    }
-
-    public void stop() {
-        if (taskId != -1) {
-            Bukkit.getScheduler().cancelTask(taskId);
-            taskId = -1;
+        if (!sender.hasPermission("entitytracker.use")) {
+            sender.sendMessage("§cУ вас нет прав для использования этой команды!");
+            return true;
         }
+
+        trackEntities(sender);
+        return true;
     }
 
-    private void trackEntities() {
+    private void trackEntities(CommandSender sender) {
         Map<EntityType, Integer> entityCount = new EnumMap<>(EntityType.class);
 
-        for (World world : Bukkit.getWorlds()) {
+        for (World world : plugin.getServer().getWorlds()) {
             for (Entity entity : world.getEntities()) {
                 entityCount.merge(entity.getType(), 1, Integer::sum);
             }
         }
 
-        StringBuilder log = new StringBuilder("§aОтслеживание сущностей на сервере:\n");
+        StringBuilder message = new StringBuilder("§aОтслеживание сущностей на сервере:\n");
         entityCount.forEach((type, count) ->
-                log.append("§7- ").append(type.name()).append(": §f").append(count).append("\n"));
+                message.append("§7- ").append(type.name()).append(": §f").append(count).append("\n"));
 
-        plugin.getLogger().info(log.toString());
+        sender.sendMessage(message.toString());
+    }
+
+    public void register() {
+        if (configManager.getBoolean("entity_tracker.enabled")) {
+            plugin.getLogger().info("Модуль отслеживания сущностей зарегистрирован.");
+        }
     }
 }

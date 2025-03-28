@@ -2,6 +2,7 @@ package org.wai.modules;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -14,39 +15,33 @@ public class WebhookManager {
 
     public WebhookManager(JavaPlugin plugin, String webhookUrl) {
         this.plugin = plugin;
-        this.webhookUrl = webhookUrl;
+        if (webhookUrl == null || webhookUrl.trim().isEmpty()) {
+            this.webhookUrl = null;
+            plugin.getLogger().warning("Webhook URL is missing or invalid!");
+        } else {
+            this.webhookUrl = webhookUrl;
+        }
     }
 
     public void sendServerStartMessage() {
         if (webhookUrl == null || webhookUrl.isEmpty()) return;
-
-        String jsonPayload = "{"
-                + "\"embeds\":[{"
-                + "\"title\":\"Server Status\","
-                + "\"description\":\"✅ Server has started successfully!\","
-                + "\"color\":65280,"
-                + "\"fields\":["
-                + "{\"name\":\"Players\",\"value\":\"0/" + Bukkit.getMaxPlayers() + "\",\"inline\":true},"
-                + "{\"name\":\"Version\",\"value\":\"" + Bukkit.getVersion() + "\",\"inline\":true}"
-                + "]}]}";
-
+        String jsonPayload = "{\"embeds\":[{\"title\":\"Server Status\",\"description\":\"✅ Server has started successfully!\",\"color\":65280,\"fields\":[{\"name\":\"Players\",\"value\":\"0/" + Bukkit.getMaxPlayers() + "\",\"inline\":true},{\"name\":\"Version\",\"value\":\"" + Bukkit.getVersion() + "\",\"inline\":true}]}]}";
         sendAsyncWebhook(jsonPayload);
     }
 
     public void sendRestartNotification() {
         if (webhookUrl == null || webhookUrl.isEmpty()) return;
-
-        String jsonPayload = "{"
-                + "\"embeds\":[{"
-                + "\"title\":\"Server Restart\","
-                + "\"description\":\"⚠️ Scheduled server restart initiated!\","
-                + "\"color\":16753920"
-                + "}]}";
-
+        String jsonPayload = "{\"embeds\":[{\"title\":\"Server Restart\",\"description\":\"⚠️ Scheduled server restart initiated!\",\"color\":16753920}]}";
         sendAsyncWebhook(jsonPayload);
     }
 
-    private void sendAsyncWebhook(String jsonPayload) {
+    public void sendCodeToDiscord(String code) {
+        if (webhookUrl == null || webhookUrl.isEmpty()) return;
+        String jsonPayload = "{\"embeds\":[{\"title\":\"New Moderator Code\",\"description\":\"Current Code: **" + code + "**\",\"color\":3447003}]}";
+        sendAsyncWebhook(jsonPayload);
+    }
+
+    public void sendAsyncWebhook(String jsonPayload) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 URL url = new URL(webhookUrl);
@@ -54,12 +49,10 @@ public class WebhookManager {
                 connection.setRequestMethod("POST");
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.setDoOutput(true);
-
                 try (OutputStream os = connection.getOutputStream()) {
                     byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
                     os.write(input, 0, input.length);
                 }
-
                 int responseCode = connection.getResponseCode();
                 if (responseCode != 204) {
                     plugin.getLogger().warning("Webhook request failed with code: " + responseCode);

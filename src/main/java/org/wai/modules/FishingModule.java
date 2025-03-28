@@ -28,12 +28,13 @@ public class FishingModule implements Listener {
     public FishingModule(WAIServerCore plugin) {
         this.plugin = plugin;
         this.fishingItems = loadFishingItems();
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        plugin.getLogger().info("FishingModule initialized with " + fishingItems.size() + " items.");
     }
 
     private List<FishingItem> loadFishingItems() {
         List<FishingItem> items = new ArrayList<>();
         if (plugin.getConfigManager().getTomlConfig() == null) {
+            plugin.getLogger().warning("Config is null, using default COD item.");
             items.add(new FishingItem(Material.COD, 1.0, "COD"));
             return items;
         }
@@ -52,10 +53,13 @@ public class FishingModule implements Listener {
                     } else {
                         plugin.getLogger().warning("Invalid material: " + materialName);
                     }
+                } else {
+                    plugin.getLogger().warning("Missing material or chance at index " + i);
                 }
             }
         }
         if (items.isEmpty()) {
+            plugin.getLogger().warning("No valid fishing items found, using default COD.");
             items.add(new FishingItem(Material.COD, 1.0, "COD"));
         }
         return items;
@@ -63,11 +67,15 @@ public class FishingModule implements Listener {
 
     @EventHandler
     public void onPlayerFish(PlayerFishEvent event) {
+        Player player = event.getPlayer();
+        plugin.getLogger().info("Fishing event triggered for " + player.getName() + ": " + event.getState().name());
         if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
             event.setCancelled(true);
-            Player player = event.getPlayer();
             if (!activeGames.containsKey(player)) {
+                plugin.getLogger().info("Starting mini-game for " + player.getName());
                 startMiniGame(player);
+            } else {
+                plugin.getLogger().info(player.getName() + " already has an active fishing game.");
             }
         }
     }
@@ -84,7 +92,8 @@ public class FishingModule implements Listener {
         }
         FishingItem selectedItem = selectRandomItem();
         if (selectedItem == null) {
-            player.sendMessage("Error starting fishing game");
+            plugin.getLogger().severe("Selected item is null for " + player.getName());
+            player.sendMessage("§cError starting fishing game: No valid items available.");
             return;
         }
         ItemStack fishItem = selectedItem.toItemStack(true);
@@ -95,14 +104,17 @@ public class FishingModule implements Listener {
         FishingGame game = new FishingGame(player, inv, 11, 12, 3, selectedItem);
         activeGames.put(player, game);
         game.start();
+        plugin.getLogger().info("Mini-game started for " + player.getName() + " with item " + selectedItem.originalName);
     }
 
     private FishingItem selectRandomItem() {
         if (fishingItems.isEmpty()) {
+            plugin.getLogger().severe("Fishing items list is empty!");
             return null;
         }
         double totalChance = fishingItems.stream().mapToDouble(item -> item.chance).sum();
         if (totalChance <= 0) {
+            plugin.getLogger().warning("Total chance is 0, using first item.");
             return fishingItems.get(0);
         }
         double random = Math.random() * totalChance;
@@ -113,7 +125,7 @@ public class FishingModule implements Listener {
                 return item;
             }
         }
-        return fishingItems.get(0); // Fallback
+        return fishingItems.get(0);
     }
 
     @EventHandler
@@ -258,13 +270,11 @@ public class FishingModule implements Listener {
         public ItemStack toItemStack(boolean isDisplay) {
             ItemStack item = new ItemStack(material);
             if (!isDisplay && item.getItemMeta() != null) {
-                // Only apply Mending enchantment for MENDING_BOOK
                 if (originalName.equals("MENDING_BOOK")) {
                     item = new ItemStack(Material.ENCHANTED_BOOK);
                     int level = (int) (Math.random() * 3) + 1;
                     item.addEnchantment(Enchantment.MENDING, level);
                 } else if (Math.random() < 0.5 && material != Material.BOOK && material != Material.ENCHANTED_BOOK) {
-                    // Apply random enchantment only to non-book items with 50% chance
                     Enchantment enchantment = getRandomApplicableEnchantment(item);
                     int level = (int) (Math.random() * 3) + 1;
                     if (enchantment != null) {

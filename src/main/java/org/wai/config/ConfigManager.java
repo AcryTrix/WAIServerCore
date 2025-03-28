@@ -17,7 +17,6 @@ public class ConfigManager {
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
         this.configPath = Paths.get(plugin.getDataFolder().getPath(), "config.toml");
-        // Ensure the data folder exists before loading
         if (!Files.exists(plugin.getDataFolder().toPath())) {
             plugin.getDataFolder().mkdirs();
         }
@@ -46,7 +45,6 @@ public class ConfigManager {
         loadConfig();
     }
 
-    // Add null-safe getter
     public TomlParseResult getTomlConfig() {
         return config;
     }
