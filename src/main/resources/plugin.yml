@@ -26,7 +26,7 @@ commands:
     usage: /lc <ник>
     permission: lc.admin
   titles:
-    description: Manage player titles
+    description: "Manage your titles"
     usage: /titles [list|set|remove]
   tradetitles:
     description: "Отправить запрос на обмен титулами или принять/отклонить запрос"
@@ -51,6 +51,14 @@ commands:
   moff:
     description: Deactivate moderator mode
     usage: /moff
+  settings:
+    description: Открывает меню настроек
+    usage: /settings
+    permission: settings.admin
+  friend:
+    description: "Управление друзьями"
+    usage: /friend <accept|deny> [никнейм]
+    aliases: [ friends, f ]
 permissions:
   entitytracker.use:
     description: Allows use of the entitytracker command

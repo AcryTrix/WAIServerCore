@@ -5,6 +5,9 @@ import org.wai.config.ConfigManager;
 import org.wai.database.DatabaseManager;
 import org.wai.modules.*;
 import org.wai.modules.titles.TitlesModule;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 
 public class WAIServerCore extends JavaPlugin {
     private ConfigManager configManager;
@@ -28,33 +31,64 @@ public class WAIServerCore extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        initializeConfig();
-        initializeDatabase();
-        initializeWebhooks();
-        initializeModules();
-        registerEvents();
-        registerCommands();
-        sendStartupMessage();
-        getLogger().info("WAIServerCore успешно запущен!");
+        try {
+            // Правильный порядок инициализации
+            initializeConfig();
+            initializeDatabase(); // Должен быть перед initializeModules()
+            initializeWebhooks();
+            initializeModules();
+            registerEvents();
+            registerCommands();
+            registerSettingsCommand();
+            sendStartupMessage();
+            getLogger().info("WAIServerCore успешно запущен!");
+        } catch (Exception e) {
+            getLogger().severe("Ошибка при запуске плагина: " + e.getMessage());
+            e.printStackTrace();
+            Bukkit.getPluginManager().disablePlugin(this);
+        }
     }
 
     @Override
     public void onDisable() {
-        databaseManager.closeConnections();
-        if (autoRestartModule != null) {
-            autoRestartModule.stop();
-        }
-        if (moderActivationModule != null) {
-            moderActivationModule.stopCodeUpdateTask();
+        try {
+            if (databaseManager != null) {
+                databaseManager.closeConnections();
+            }
+            if (autoRestartModule != null) {
+                autoRestartModule.stop();
+            }
+            if (moderActivationModule != null) {
+                moderActivationModule.stopCodeUpdateTask();
+            }
+        } catch (Exception e) {
+            getLogger().severe("Ошибка при выключении плагина: " + e.getMessage());
         }
         getLogger().info("WAIServerCore отключен");
     }
 
+    private void registerSettingsCommand() {
+        getCommand("settings").setExecutor((sender, command, label, args) -> {
+            if (sender instanceof Player) {
+                settingsMenu.openSettingsMenu((Player) sender);
+            } else {
+                sender.sendMessage(ChatColor.RED + "Команда доступна только игрокам!");
+            }
+            return true;
+        });
+    }
+
     private void initializeConfig() {
+        // Сохраняем дефолтный TOML-конфиг вместо YAML
+        saveResource("config.toml", false);
         configManager = new ConfigManager(this);
+        configManager.loadConfig(); // Загружаем TOML
     }
 
     private void initializeDatabase() {
+        if (configManager == null) {
+            throw new IllegalStateException("ConfigManager не инициализирован");
+        }
         databaseManager = new DatabaseManager(this, configManager.getString("database.path"));
     }
 
@@ -64,7 +98,17 @@ public class WAIServerCore extends JavaPlugin {
     }
 
     private void initializeModules() {
-        moderActivationModule = new ModerActivationModule(this, new WebhookManager(this, configManager.getString("discord.moder_webhook_url")), configManager);
+        if (databaseManager == null) {
+            throw new IllegalStateException("DatabaseManager не инициализирован");
+        }
+
+        // Используем существующие вебхуки вместо создания новых
+        moderActivationModule = new ModerActivationModule(
+                this,
+                webhookManager, // Используем основной вебхук
+                configManager
+        );
+
         linkingModule = new LinkingModule(this, databaseManager.getLinksConnection());
         altsModule = new AltsModule(this, databaseManager.getAltsConnection());
         autoRestartModule = new AutoRestartModule(this, webhookManager);
@@ -98,6 +142,9 @@ public class WAIServerCore extends JavaPlugin {
         titlesModule.registerCommandsAndEvents();
         worldControlModule.registerCommandsAndEvents();
         moderActivationModule.registerCommandsAndEvents();
+        registerSettingsCommand();
+
+        this.getCommand("friend").setExecutor(new ProfileModule.FriendCommand(this));
     }
 
     private void sendStartupMessage() {

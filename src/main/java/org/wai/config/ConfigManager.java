@@ -23,7 +23,7 @@ public class ConfigManager {
         loadConfig();
     }
 
-    private void loadConfig() {
+    public void loadConfig() {
         if (!Files.exists(configPath)) {
             try {
                 plugin.saveResource("config.toml", false);
