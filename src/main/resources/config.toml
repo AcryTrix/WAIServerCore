@@ -66,6 +66,22 @@ messages = [
     "System maintenance in progress."
 ]
 
+[vape]
+particle = "CAMPFIRE_COSY_SMOKE"
+duration = 60
+
+[virus]
+max_radius = 15
+base_interval = 20
+infection_chance = 30.0
+speed_increase = 0.1
+consumable_items = [
+    "APPLE",
+    "BREAD",
+    "ROTTEN_FLESH",
+    "SPIDER_EYE"
+]
+
 [worldcontrol]
 end_closed = true
 nether_closed = true

@@ -59,6 +59,13 @@ commands:
     description: "Управление друзьями"
     usage: /friend <accept|deny> [никнейм]
     aliases: [ friends, f ]
+  vape:
+    description: "Активировать эффект вейпа"
+    usage: /vape
+  spit:
+    description: Плюнуть перед собой
+    usage: /spit
+    permission: spit.use
 permissions:
   entitytracker.use:
     description: Allows use of the entitytracker command

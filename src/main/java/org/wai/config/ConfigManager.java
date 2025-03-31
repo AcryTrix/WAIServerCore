@@ -65,6 +65,25 @@ public class ConfigManager {
         return value != null ? value : 0L;
     }
 
+    // ConfigManager.java
+    public int getInt(String path, int defaultValue) {
+        Object value = config.get(path); // Предполагается, что config - ваш TOML-объект
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        return defaultValue;
+    }
+
+    public String getString(String path, String defaultValue) {
+        String value = config.getString(path); // Предполагается, что config — TOML-объект
+        return (value != null) ? value : defaultValue;
+    }
+
+    public <T> T get(String path, T defaultValue) {
+        Object value = config.get(path);
+        return (value != null) ? (T) value : defaultValue;
+    }
+
     public java.util.List<String> getStringList(String key) {
         return config != null && config.getArray(key) != null ? config.getArray(key).toList().stream()
                 .map(Object::toString)

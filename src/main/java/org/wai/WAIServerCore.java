@@ -28,10 +28,12 @@ public class WAIServerCore extends JavaPlugin {
     private FishingModule fishingModule;
     private EntityTrackerModule entityTrackerModule;
     private ModerActivationModule moderActivationModule;
+    private VapeModule vapeModule;
 
     @Override
     public void onEnable() {
         try {
+            // Правильный порядок инициализации
             // Правильный порядок инициализации
             initializeConfig();
             initializeDatabase(); // Должен быть перед initializeModules()
@@ -122,6 +124,7 @@ public class WAIServerCore extends JavaPlugin {
         worldControlModule = new WorldControlModule(this);
         fishingModule = new FishingModule(this);
         entityTrackerModule = new EntityTrackerModule(this, configManager);
+        vapeModule = new VapeModule(this, configManager);
     }
 
     private void registerEvents() {
@@ -143,6 +146,7 @@ public class WAIServerCore extends JavaPlugin {
         worldControlModule.registerCommandsAndEvents();
         moderActivationModule.registerCommandsAndEvents();
         registerSettingsCommand();
+        vapeModule.registerCommandsAndEvents();
 
         this.getCommand("friend").setExecutor(new ProfileModule.FriendCommand(this));
     }
