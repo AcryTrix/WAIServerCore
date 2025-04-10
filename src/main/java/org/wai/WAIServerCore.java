@@ -10,33 +10,34 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 public class WAIServerCore extends JavaPlugin {
-    private ConfigManager configManager;
+		private ConfigManager configManager;
     private DatabaseManager databaseManager;
-    private WebhookManager webhookManager;
+
+		private AltsModule altsModule;
+		private AutoRestartModule autoRestartModule;
+		private ElytraTrackerModule elytraTrackerModule;
+		private EntityTrackerModule entityTrackerModule;
+		private FishingModule fishingModule;
+		private InvisibleFrameModule invisibleFrameModule;
+		private LinkingModule linkingModule;
+		private ModerActivationModule moderActivationModule;
+		private MOTDModule motdModule;
+		private PlayerInfoModule playerInfoModule;
+		private ProfileModule profileModule;
+		private ReportModule reportModule;
+		private TitlesModule titlesModule;
+		private SettingsMenu settingsMenu;
+		private SleepSkipModule sleepSkipModule;
+		private VapeModule vapeModule;
+		private WebhookManager webhookManager;
     private WebhookManager reportWebhookManager;
-    private LinkingModule linkingModule;
-    private AltsModule altsModule;
-    private AutoRestartModule autoRestartModule;
-    private MOTDModule motdModule;
-    private SleepSkipModule sleepSkipModule;
-    private PlayerInfoModule playerInfoModule;
-    private TitlesModule titlesModule;
-    private SettingsMenu settingsMenu;
-    private ProfileModule profileModule;
-    private ReportModule reportModule;
     private WorldControlModule worldControlModule;
-    private FishingModule fishingModule;
-    private EntityTrackerModule entityTrackerModule;
-    private ModerActivationModule moderActivationModule;
-    private VapeModule vapeModule;
 
     @Override
     public void onEnable() {
         try {
-            // Правильный порядок инициализации
-            // Правильный порядок инициализации
             initializeConfig();
-            initializeDatabase(); // Должен быть перед initializeModules()
+            initializeDatabase();
             initializeWebhooks();
             initializeModules();
             registerEvents();
@@ -81,10 +82,9 @@ public class WAIServerCore extends JavaPlugin {
     }
 
     private void initializeConfig() {
-        // Сохраняем дефолтный TOML-конфиг вместо YAML
         saveResource("config.toml", false);
         configManager = new ConfigManager(this);
-        configManager.loadConfig(); // Загружаем TOML
+        configManager.loadConfig();
     }
 
     private void initializeDatabase() {
@@ -104,10 +104,9 @@ public class WAIServerCore extends JavaPlugin {
             throw new IllegalStateException("DatabaseManager не инициализирован");
         }
 
-        // Используем существующие вебхуки вместо создания новых
         moderActivationModule = new ModerActivationModule(
                 this,
-                webhookManager, // Используем основной вебхук
+                webhookManager,
                 configManager
         );
 
